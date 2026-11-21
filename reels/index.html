@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Reel Studio</title>
-<meta name="description" content="Make Punjabi reels: one line in Shahmukhi and Gurmukhi, read aloud word by word.">
+<meta name="description" content="Make Punjabi reels: each saying in Shahmukhi and Gurmukhi, with the reading and meaning, over the voice that speaks it.">
 <meta name="theme-color" content="#1A0909">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
@@ -19,12 +19,13 @@
 <main class="app">
   <header class="top">
     <h1>Reel Studio</h1>
-    <p class="sub">One line, two scripts. <span lang="pnb" dir="rtl">پنجابی</span> · <span lang="pa">ਪੰਜਾਬੀ</span></p>
+    <p class="sub">One saying, two scripts. <span lang="pnb" dir="rtl">پنجابی</span> · <span lang="pa">ਪੰਜਾਬੀ</span></p>
   </header>
 
   <div class="preview">
     <canvas id="stage" aria-label="Reel preview"></canvas>
     <p id="cue" class="cue" aria-live="assertive"></p>
+    <button type="button" id="live-next" class="primary big" hidden>Start line 1</button>
   </div>
 
   <div class="controls">
@@ -35,37 +36,45 @@
     </div>
     <p id="status" class="status" aria-live="polite"></p>
 
-    <label for="line">Line</label>
-    <select id="line"></select>
+    <label for="saying">Saying</label>
+    <select id="saying"></select>
+    <div class="row">
+      <button type="button" id="btn-new" class="small-btn">Add a saying</button>
+      <button type="button" id="btn-edit" class="small-btn" hidden>Edit this saying</button>
+    </div>
     <p id="check-warn" class="warn" hidden>Not checked yet. Compare both scripts with a published source before posting.</p>
-    <p id="align-warn" class="warn" hidden>The three versions of this line have different word counts, so word highlighting is off. Check the spacing in lines.json.</p>
+
+    <fieldset>
+      <legend>Sound</legend>
+      <div class="choices">
+        <label class="choice"><input type="radio" name="sound" value="upload"><span><b>Upload a recording</b>A voice note or video someone sent you. The reel lasts as long as the recording.</span></label>
+        <label class="choice"><input type="radio" name="sound" value="live"><span><b>Record my voice now</b>Speak into the phone and tap as you start each line.</span></label>
+        <label class="choice"><input type="radio" name="sound" value="none"><span><b>No sound</b>Lines are timed automatically. You can add a voiceover in Instagram later.</span></label>
+      </div>
+      <div id="upload-box" class="subbox" hidden>
+        <label for="audio-file">Recording (audio or video file)</label>
+        <input id="audio-file" type="file" accept="audio/*,video/*">
+        <p id="timing-status" class="hint"></p>
+        <button type="button" id="btn-timing" class="small-btn" hidden>Time the lines</button>
+      </div>
+      <p id="live-note" class="hint" hidden>After the countdown, a big button appears under the preview. Tap it as you start each line, then tap Finish.</p>
+    </fieldset>
 
     <fieldset>
       <legend>Background</legend>
       <div class="choices">
         <label class="choice"><input type="radio" name="bg" value="phulkari"><span><b>Phulkari</b>Golden silk stitches on madder red</span></label>
         <label class="choice"><input type="radio" name="bg" value="sarson"><span><b>Sarson at dusk</b>Mustard fields under an evening sky</span></label>
-        <label class="choice"><input type="radio" name="bg" value="own"><span><b>Your photo or video</b>Darkened so the words stay readable</span></label>
+        <label class="choice"><input type="radio" name="bg" value="own"><span><b>Your photo or video</b>Darkened so the words stay readable. Keep faces out to stay faceless.</span></label>
       </div>
-      <div id="own-picker" hidden>
+      <div id="own-picker" class="subbox" hidden>
         <label for="own-file">Choose a photo or video</label>
         <input id="own-file" type="file" accept="image/*,video/*">
       </div>
     </fieldset>
 
-    <label for="pace">Reading pace</label>
-    <select id="pace">
-      <option value="1.1">Slow, about 1 second per word</option>
-      <option value="0.8">Steady, about 0.8 seconds per word</option>
-      <option value="0.6">Brisk, about 0.6 seconds per word</option>
-    </select>
-
     <label for="handle">Your handle on the end card</label>
     <input id="handle" type="text" placeholder="@yourpage" autocomplete="off" autocapitalize="off" spellcheck="false">
-
-    <label class="check"><input id="voice" type="checkbox" checked> Record my voice</label>
-    <label class="check"><input id="denoise" type="checkbox" checked> Reduce background noise</label>
-    <p class="hint">Recording counts down from 3. Read each word when it turns gold. The words on this screen under the preview are only for you and aren't in the video.</p>
   </div>
 
   <section id="result" class="result" hidden aria-labelledby="result-title">
@@ -77,10 +86,50 @@
       <a id="btn-save" class="button">Save video</a>
     </div>
     <label for="caption-text">Caption</label>
-    <textarea id="caption-text" rows="9"></textarea>
+    <textarea id="caption-text" rows="10"></textarea>
     <div class="row"><button type="button" id="btn-copy">Copy caption</button><span id="copy-status" class="meta" aria-live="polite"></span></div>
   </section>
 </main>
+
+<section id="timing" class="sheet" hidden aria-labelledby="timing-title">
+  <div class="sheet-inner">
+    <h2 id="timing-title">Time the lines</h2>
+    <p id="timing-msg" class="hint"></p>
+    <ol id="timing-list" class="timing-list"></ol>
+    <button type="button" id="tap" class="primary big" disabled>Tap when line 1 starts</button>
+    <div class="row">
+      <button type="button" id="timing-play">Play</button>
+      <button type="button" id="timing-done">Done</button>
+    </div>
+  </div>
+</section>
+
+<section id="editor" class="sheet" hidden aria-labelledby="editor-title">
+  <div class="sheet-inner">
+    <h2 id="editor-title">Saying</h2>
+    <p class="hint">Put each line on its own row. Row 1 of each box belongs together, then row 2, and so on. Each row becomes one screen of the reel.</p>
+    <label for="ed-poet">Poet or source</label>
+    <input id="ed-poet" type="text" placeholder="Bulleh Shah, Punjabi proverb, Grandmother in Sialkot…">
+    <label for="ed-sm">Shahmukhi</label>
+    <textarea id="ed-sm" rows="3" dir="rtl" lang="pnb" class="sm"></textarea>
+    <label for="ed-gm">Gurmukhi</label>
+    <textarea id="ed-gm" rows="3" lang="pa" class="gm"></textarea>
+    <label for="ed-ro">Romanised (optional)</label>
+    <textarea id="ed-ro" rows="3"></textarea>
+    <label for="ed-en">English meaning (optional)</label>
+    <textarea id="ed-en" rows="3"></textarea>
+    <label for="ed-note">Note for yourself (optional)</label>
+    <input id="ed-note" type="text">
+    <label class="check"><input id="ed-checked" type="checkbox"> Checked by a fluent reader</label>
+    <p id="ed-msg" class="status" aria-live="polite"></p>
+    <div class="row">
+      <button type="button" id="ed-save" class="primary">Save on this phone</button>
+      <button type="button" id="ed-copy">Copy for lines.json</button>
+      <button type="button" id="ed-cancel">Cancel</button>
+      <button type="button" id="ed-delete" hidden>Delete</button>
+    </div>
+  </div>
+</section>
 <script src="studio.js"></script>
 </body>
 </html>

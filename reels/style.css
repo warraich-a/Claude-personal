@@ -64,4 +64,20 @@ button:focus-visible, .button:focus-visible, select:focus-visible, input:focus-v
 
 /* while recording, hide everything but the stage and the cue */
 .is-recording .controls, .is-recording .top, .is-recording .result { display: none; }
-.is-recording #stage { max-width: min(100%, calc(80vh * 9 / 16)); }
+.is-recording #stage { max-width: min(100%, calc(66vh * 9 / 16)); }
+
+/* sound + timing + editor */
+.subbox { display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px dashed var(--line); border-radius: 12px; }
+.small-btn { padding: 7px 14px; font-size: 0.88rem; }
+button.big { width: 100%; padding: 18px; font-size: 1.15rem; }
+button:disabled { opacity: 0.45; cursor: default; }
+.sheet {
+  position: fixed; inset: 0; z-index: 20; overflow-y: auto; background: var(--ground);
+  padding: calc(16px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+}
+.sheet-inner { max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
+.timing-list { margin: 0; padding-left: 1.4em; display: flex; flex-direction: column; gap: 6px; font: italic 600 1.1rem var(--display); color: var(--muted); }
+.timing-list li.done { color: var(--gold); }
+textarea.sm { font-family: "Noto Nastaliq Urdu", serif; line-height: 2.1; }
+textarea.gm { font-family: "Anek Gurmukhi", "Noto Sans Gurmukhi", sans-serif; }
+.is-recording .controls, .is-recording .top, .is-recording .result { display: none; }
