@@ -38,6 +38,7 @@
     <span id="hint" class="hint">Hold still</span>
     <div class="hud-actions">
       <button type="button" id="btn-next">Next</button>
+      <button type="button" id="btn-reel" hidden>Reel</button>
       <button type="button" id="btn-edit">Messages</button>
       <button type="button" id="btn-mode" aria-label="Change language">Language</button>
     </div>
@@ -72,6 +73,46 @@
   </div>
 </section>
 
+<section id="reel" class="sheet reel" hidden aria-labelledby="reel-title">
+  <div id="reel-setup" class="sheet-inner">
+    <h2 id="reel-title">Make a reel</h2>
+    <p class="small">Plays the line full screen in the Reels shape (9:16) and records it. Read the line aloud when the screen says <b>Read now</b>.</p>
+    <label class="field-label" for="reel-line">Line</label>
+    <select id="reel-line"></select>
+    <p id="reel-warn" class="warn" hidden>This line isn't checked yet. Check the spelling in both scripts before posting it publicly.</p>
+    <label class="field-label" for="reel-lead">Start with</label>
+    <select id="reel-lead">
+      <option value="sm">Shahmukhi, then Gurmukhi</option>
+      <option value="gm">Gurmukhi, then Shahmukhi</option>
+    </select>
+    <label class="field-label" for="reel-handle">Your handle on the end card (optional)</label>
+    <input id="reel-handle" type="text" placeholder="@yourpage" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <label class="check" for="reel-voice"><input id="reel-voice" type="checkbox" checked> Record my voice with the microphone</label>
+    <div class="row">
+      <button type="button" id="reel-record" class="primary">Record</button>
+      <button type="button" id="reel-close">Close</button>
+    </div>
+    <p id="reel-status" class="small" aria-live="polite"></p>
+  </div>
+  <div id="reel-stage" class="reel-stage" hidden>
+    <canvas id="reel-canvas" class="reel-canvas"></canvas>
+    <p id="reel-cue" class="reel-cue" aria-live="polite"></p>
+  </div>
+  <div id="reel-result" class="sheet-inner" hidden>
+    <h2>Your reel</h2>
+    <video id="reel-video" class="reel-video" controls playsinline></video>
+    <p id="reel-format" class="warn"></p>
+    <div class="row">
+      <button type="button" id="reel-share" class="primary">Share to Instagram…</button>
+      <a id="reel-save" class="button-link">Save video</a>
+      <button type="button" id="reel-redo">Record again</button>
+      <button type="button" id="reel-close-2">Done</button>
+    </div>
+    <p class="small">In Instagram, choose Reel, pick this video, then add your caption. Put the source of the line in the caption.</p>
+  </div>
+</section>
+
 <script src="app.js"></script>
+<script src="reel.js"></script>
 </body>
 </html>

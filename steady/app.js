@@ -214,6 +214,7 @@ function onMotion(e) {
   gravity.y = -dx * Math.sin(ang) + dy * Math.cos(ang);
 }
 function registerSpike() {
+  if (typeof reelActive !== "undefined" && reelActive) return;
   const now = performance.now();
   if (now - lastSpike < T.shakeWindow && now - lastShake > 1200) { lastShake = now; next(); }
   lastSpike = now;
@@ -245,6 +246,7 @@ async function start(chosen) {
   }
   mode = chosen; saveMode(mode);
   $("btn-edit").hidden = mode === "pa";
+  $("btn-reel").hidden = mode !== "pa";
   if (mode === "pa") {
     $("intro-note").textContent = "Loading Punjabi fonts…";
     await loadPunjabi().catch(() => {});
@@ -284,6 +286,7 @@ function mix(a, b, t) { return `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) 
 
 function frame(now) {
   requestAnimationFrame(frame);
+  if (typeof reelActive !== "undefined" && reelActive) return; // the reel maker has the screen
   if (usingPointer) jitter *= 0.94;
   const raw = Math.max(0, Math.min(1, 1 - (jitter - T.jitterFloor) / T.jitterRange));
   stillness += (raw - stillness) * (raw > stillness ? 0.035 : 0.25);

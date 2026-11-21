@@ -37,6 +37,15 @@ A **Listen** button appears only on phones with a Punjabi (`pa`) text-to-speech 
 
 Fonts (Noto Nastaliq Urdu, Noto Sans Gurmukhi) load from Google Fonts on first use, then work offline.
 
+## Making reels (Punjabi mode)
+
+Tap **Reel**, pick a line, and tap **Record**. The line plays full screen in 9:16: dots form one script, flow into the other, then the romanised reading and meaning appear. Read the line aloud when the screen says **Read now**; your voice is recorded with the video. At the end you can **Share to Instagram**, save the video, or record again.
+
+- Output is MP4, 1080×1920, about 15–20 seconds, depending on line length.
+- Lines that aren't marked `checked` show a warning before recording.
+- Your handle (optional) appears on the end card and is remembered on the phone.
+- Record somewhere quiet, holding the phone still. The screen stays on during recording.
+
 ## Editing messages
 
 English mode only. Tap **Messages**. One message per line; add an author after two dashes: `Be kind -- Mum`.
