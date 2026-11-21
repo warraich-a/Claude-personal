@@ -32,9 +32,8 @@ header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; b
 h1 { margin: 0; font: italic 600 1.7rem/1.1 var(--display); color: var(--gold); }
 .brand .sm-word { font: 700 1.2rem/1 var(--sm); color: var(--muted); }
 nav.tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-nav.tabs a { text-align: center; text-decoration: none; color: var(--muted); font-weight: 600; padding: 8px 6px; border-radius: 10px; border: 1px solid var(--line); }
-nav.tabs a[aria-current="page"] { color: #2A0E08; background: var(--gold); border-color: var(--gold); }
-nav.tabs a:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+nav.tabs button { text-align: center; color: var(--muted); font-weight: 600; padding: 8px 6px; border-radius: 10px; border: 1px solid var(--line); background: transparent; }
+nav.tabs button[aria-current="page"] { color: #2A0E08; background: var(--gold); border-color: var(--gold); }
 .count { font-variant-numeric: tabular-nums; opacity: .8; }
 
 main section.view { display: flex; flex-direction: column; gap: 14px; padding-top: 16px; }
@@ -122,9 +121,9 @@ progress { width: 100%; accent-color: var(--gold); }
   <header class="top">
     <div class="brand"><h1>Punjabi Reel Studio</h1><span class="sm-word" lang="pnb" dir="rtl">پنجابی</span></div>
     <nav class="tabs" aria-label="Sections">
-      <a href="#library" data-view="library">Library <span class="count" id="count-review"></span></a>
-      <a href="#studio" data-view="studio">Studio</a>
-      <a href="#media" data-view="media">Media</a>
+      <button type="button" data-view="library">Library <span class="count" id="count-review"></span></button>
+      <button type="button" data-view="studio">Studio</button>
+      <button type="button" data-view="media">Media</button>
     </nav>
   </header>
   <p id="offline" class="banner" hidden></p>
@@ -334,6 +333,11 @@ const local = {
   set(k, v) { try { localStorage.setItem(k, v); } catch (_) { /* per-viewer convenience only */ } },
 };
 
+// Unexpected errors appear at the top of the page, so a screenshot shows what broke.
+function showError(msg) { const b = $("offline"); if (!b) return; b.textContent = "Something went wrong: " + msg + ". Send a screenshot of this to Claude."; b.hidden = false; }
+window.addEventListener("error", (e) => showError(e.message || "unknown error"));
+window.addEventListener("unhandledrejection", (e) => { const r = e.reason; showError((r && (r.message || r.code)) || String(r)); });
+
 const app = {
   db: null, assets: null, downloads: null,
   sayings: [], media: [],
@@ -345,12 +349,19 @@ const state = {
 };
 
 // ---------- tabs ----------
-function showView() {
-  const v = ["library", "studio", "media"].includes(location.hash.slice(1)) ? location.hash.slice(1) : "library";
-  document.querySelectorAll("nav.tabs a").forEach((a) => a.setAttribute("aria-current", a.dataset.view === v ? "page" : "false"));
-  ["library", "studio", "media"].forEach((n) => { $("view-" + n).hidden = n !== v; });
+/* Screens switch directly. The address is updated only as a bookmark and is never relied on:
+   inside the Claude app the page runs in a frame where in-page links may not navigate. */
+const VIEWS = ["library", "studio", "media"];
+function setView(v) {
+  if (!VIEWS.includes(v)) v = "library";
+  document.querySelectorAll("nav.tabs button").forEach((b) => b.setAttribute("aria-current", b.dataset.view === v ? "page" : "false"));
+  VIEWS.forEach((n) => { $("view-" + n).hidden = n !== v; });
   if (v !== "studio") stopPreview();
+  try { if (location.hash.slice(1) !== v) history.replaceState(null, "", "#" + v); } catch (_) { /* bookmarking is optional */ }
+  window.scrollTo(0, 0);
 }
+function showView() { setView(location.hash.slice(1)); }
+document.querySelectorAll("nav.tabs button").forEach((b) => b.addEventListener("click", () => setView(b.dataset.view)));
 window.addEventListener("hashchange", showView);
 
 // ---------- data ----------
@@ -428,7 +439,7 @@ function cardFor(s) {
   toggle.setAttribute("aria-expanded", String(open));
   toggle.onclick = () => { app.openCard = open ? null : s.id; renderLibrary(); };
   const make = el("button", { type: "button", className: "small", textContent: "Make reel" });
-  make.onclick = () => { state.sayingId = s.id; $("saying").value = s.id; marks = null; rebuildScene(); location.hash = "#studio"; };
+  make.onclick = () => { state.sayingId = s.id; $("saying").value = s.id; marks = null; rebuildScene(); loadVoiceMarks(); setView("studio"); };
   card.append(el("div", { className: "row" }, toggle, make));
   if (open) card.append(detailsFor(s));
   return card;
@@ -448,13 +459,16 @@ function detailsFor(s) {
   if (s.researchNote) d.append(el("p", { className: "hint", textContent: "Research note: " + s.researchNote }));
   if (s.note) d.append(el("p", { className: "hint", textContent: "Note: " + s.note }));
   const canWrite = !!app.db;
+  const why = el("p", { className: "warn", role: "status" });
   const actions = el("div", { className: "row" });
+  if (!canWrite) d.append(el("p", { className: "warn", textContent: "Changes can't be saved in this view." }));
   if (canWrite) {
     if (s.status !== "approved") {
       const ok = el("button", { type: "button", className: "small primary", textContent: "Approve" });
-      ok.disabled = !s.sources.length;
-      ok.title = s.sources.length ? "Checked against its source by a fluent reader" : "Add a source first";
-      ok.onclick = () => setStatus(s, "approved");
+      ok.onclick = () => {
+        if (!s.sources.length) { why.textContent = "Add a source before approving: tap Edit and fill in Sources."; return; }
+        setStatus(s, "approved");
+      };
       actions.append(ok);
     }
     if (s.status !== "rejected") { const no = el("button", { type: "button", className: "small", textContent: "Reject" }); no.onclick = () => setStatus(s, "rejected"); actions.append(no); }
@@ -471,7 +485,7 @@ function detailsFor(s) {
     };
     actions.append(del);
   }
-  d.append(actions);
+  d.append(actions, why);
   return d;
 }
 async function setStatus(s, status) {
