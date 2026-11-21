@@ -1,6 +1,6 @@
 // Offline cache for the studio. Bump VERSION whenever the list of cached files changes.
-const VERSION = "reels-v5";
-const SHELL = ["./", "index.html", "style.css?v=5", "studio.js?v=5", "lines.json", "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png"];
+const VERSION = "reels-v6";
+const SHELL = ["./", "index.html", "style.css?v=6", "studio.js?v=6", "lines.json", "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png"];
 self.addEventListener("install", (e) => e.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting())));
 self.addEventListener("activate", (e) => e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== VERSION).map((k) => caches.delete(k)))).then(() => self.clients.claim())));
 // Network first, and always ask the server whether our own files changed (GitHub Pages lets

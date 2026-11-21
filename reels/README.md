@@ -5,7 +5,7 @@ Makes Instagram reels (9:16, 1080×1920 MP4) of Punjabi wisdom in Shahmukhi.
 Each reel shows one saying. A saying has one or more lines, and each line gets its own screen while it is spoken:
 
 - the poet or source at the top
-- the line in **Shahmukhi**, marked "read right to left"
+- the line in **Shahmukhi**
 - the romanised reading and the English meaning
 - an end card with your handle
 

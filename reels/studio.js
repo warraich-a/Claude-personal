@@ -191,7 +191,7 @@ function layout(c, text, font, weight, box, opts) {
 function layoutPart(c, p) {
   const X = 170, Wd = RW - 340; // inside the phulkari panel, clear of Instagram's right-hand buttons
   return {
-    sm: layout(c, p.shahmukhi, F.sm, 700, { x: X, y: 440, w: Wd, h: 560 }, { size: 124, min: 40, lineH: 1.9, rtl: true, spaceMul: 2.2 }),
+    sm: layout(c, p.shahmukhi, F.sm, 700, { x: X, y: 380, w: Wd, h: 620 }, { size: 124, min: 40, lineH: 1.9, rtl: true, spaceMul: 2.2 }),
     ro: p.roman ? layout(c, p.roman, F.roman, "italic 600", { x: X, y: 1050, w: Wd, h: 230 }, { size: 70, min: 34, lineH: 1.25 }) : null,
     en: p.english,
   };
@@ -364,13 +364,6 @@ function lineCount(c, text, maxW) {
 }
 function drawPart(c, L, dt, alpha) {
   const step = (s) => alpha * ease((dt - s) / 0.4);
-  const la = step(0);
-  if (la > 0) {
-    c.globalAlpha = la * 0.9; c.font = `600 30px ${F.body}`; c.fillStyle = C.muted;
-    c.textAlign = "center"; c.textBaseline = "middle"; c.direction = "ltr";
-    c.fillText("read right to left  ←", RW / 2, 370);
-    c.globalAlpha = 1;
-  }
   drawWords(c, L.sm, dt, alpha);
   if (L.ro) drawWords(c, L.ro, dt - 0.45, alpha);
   const ea = step(0.8);
