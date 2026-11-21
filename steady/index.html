@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <title>Steady</title>
-<meta name="description" content="Hold the phone still and a message forms. Shake it for the next one.">
+<meta name="description" content="Hold the phone still and a message forms. Shake it for the next one. In English or in Punjabi, in both scripts.">
 <meta name="theme-color" content="#0B0F14">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -13,15 +13,23 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@700&family=Noto+Sans+Gurmukhi:wght@700&display=swap">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <canvas id="stage" aria-hidden="true"></canvas>
 
 <p id="sr-message" class="sr-only" aria-live="polite"></p>
+<p id="script-tag" class="script-tag" aria-hidden="true"></p>
 
-<div id="caption" class="caption" hidden>
-  <span id="author"></span>
+<div id="card" class="card" hidden>
+  <p id="card-roman" class="card-roman" lang="pa-Latn"></p>
+  <p id="card-english" class="card-english"></p>
+  <p class="card-meta"><span id="card-poet" class="card-poet"></span><span id="card-unchecked" class="badge" hidden>Not yet checked</span></p>
+  <p id="card-note" class="card-note" hidden></p>
+  <button type="button" id="btn-listen" hidden>Listen</button>
 </div>
 
 <div id="hud" class="hud" hidden>
@@ -31,6 +39,7 @@
     <div class="hud-actions">
       <button type="button" id="btn-next">Next</button>
       <button type="button" id="btn-edit">Messages</button>
+      <button type="button" id="btn-mode" aria-label="Change language">Language</button>
     </div>
   </div>
 </div>
@@ -40,7 +49,11 @@
     <p class="eyebrow">A message you have to earn</p>
     <h1>Steady</h1>
     <p>Hand your phone to someone. The dots drift wherever they tilt it. When they hold it still, the dots settle into a message. Shake it for the next one.</p>
-    <button type="button" id="btn-start" class="primary">Begin</button>
+    <p class="small">In Punjabi, each line forms in Shahmukhi, then the same dots flow into Gurmukhi, with the sound and meaning underneath. One language, two scripts.</p>
+    <div class="row">
+      <button type="button" id="btn-start-pa" class="primary start">ਪੰਜਾਬੀ · پنجابی</button>
+      <button type="button" id="btn-start-en" class="start">English</button>
+    </div>
     <p id="intro-note" class="small">Uses the motion sensor and keeps the screen awake while open. Nothing is recorded or sent anywhere.</p>
   </div>
 </section>

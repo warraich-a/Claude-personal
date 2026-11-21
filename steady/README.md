@@ -27,9 +27,19 @@ Phone browsers only allow motion sensors on HTTPS pages.
 
 On iPhone, tap **Begin** and allow motion access when asked. If you denied it, the permission resets after you close and reopen the app.
 
+## Punjabi mode
+
+Pick **ਪੰਜਾਬੀ · پنجابی** on the start screen. Each line forms in one script; while the phone stays still, the same dots flow into the other script and back every few seconds. Underneath: a romanised reading, the English meaning, and the poet. Lines alternate which script leads.
+
+The lines live in `punjabi.json`. Each entry has `shahmukhi`, `gurmukhi`, `roman`, `english`, `poet`, an optional `note`, and `checked`. Lines show a **Not yet checked** badge until `checked` is `true`, so set it only after a fluent reader has compared the line with a published source. You can edit the file in GitHub's web editor; no code changes needed.
+
+A **Listen** button appears only on phones with a Punjabi (`pa`) text-to-speech voice installed, and it reads the Gurmukhi. Recorded audio by a real speaker would be better and is the obvious next step.
+
+Fonts (Noto Nastaliq Urdu, Noto Sans Gurmukhi) load from Google Fonts on first use, then work offline.
+
 ## Editing messages
 
-Tap **Messages**. One message per line; add an author after two dashes: `Be kind -- Mum`.
+English mode only. Tap **Messages**. One message per line; add an author after two dashes: `Be kind -- Mum`.
 
 ## Tuning
 

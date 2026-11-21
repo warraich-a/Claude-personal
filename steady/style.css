@@ -38,12 +38,26 @@ button.primary { background: var(--gold); color: var(--ink); border-color: var(-
 .hud-actions { display: flex; gap: 8px; }
 .hint { font-size: 0.85rem; color: var(--muted); letter-spacing: 0.02em; }
 
-.caption {
-  position: fixed; left: 0; right: 0; bottom: calc(96px + env(safe-area-inset-bottom, 0px));
-  text-align: center; font: italic 1.05rem var(--serif); color: var(--gold);
-  padding: 0 24px; animation: fade 1.2s ease both;
+/* Reading card: sits between the message and the controls */
+.card {
+  position: fixed; left: 0; right: 0; bottom: calc(92px + env(safe-area-inset-bottom, 0px));
+  padding: 0 max(20px, env(safe-area-inset-right, 0px)) 0 max(20px, env(safe-area-inset-left, 0px));
+  display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center;
+  animation: fade 1.2s ease both;
 }
-.caption span::before { content: "— "; }
+.card p { margin: 0; max-width: 34rem; }
+.card-roman { font: italic 1.15rem/1.4 var(--serif); color: var(--gold); }
+.card-english { font-size: 0.95rem; line-height: 1.45; color: var(--text); }
+.card-meta { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--muted); }
+.card-poet:not(:empty)::before { content: "— "; }
+.card-note { font-size: 0.78rem; color: var(--muted); }
+.badge { font-size: 0.68rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--gold); border: 1px solid currentColor; border-radius: 999px; padding: 2px 8px; }
+#btn-listen { padding: 6px 14px; font-size: 0.8rem; }
+.script-tag {
+  position: fixed; left: 0; right: 0; top: calc(18px + env(safe-area-inset-top, 0px)); margin: 0;
+  text-align: center; font-size: 0.78rem; letter-spacing: 0.06em; color: var(--muted);
+}
+.start { padding: 12px 22px; font-size: 1rem; }
 @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
 .sheet {
@@ -60,10 +74,9 @@ h2 { margin: 0; font: 400 1.6rem var(--serif); }
 .sheet p { margin: 0; line-height: 1.55; max-width: 60ch; }
 .small { font-size: 0.85rem; color: var(--muted); }
 code { font-size: 0.85em; color: var(--text); }
-.intro .primary { align-self: flex-start; padding: 12px 28px; font-size: 1rem; }
 textarea {
   width: 100%; font: 1rem/1.5 var(--serif); color: var(--text);
   background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px; resize: vertical;
 }
 .row { display: flex; flex-wrap: wrap; gap: 8px; }
-@media (prefers-reduced-motion: reduce) { .caption { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .card { animation: none; } }
