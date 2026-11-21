@@ -1,0 +1,466 @@
+<title>WiFi Crack Clock</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one instrument column. Input on top, a log-scale time ruler under it, then the reasoning, then the fix. */
+:root {
+  --bg: #EDF0F4;
+  --surface: #FFFFFF;
+  --fg: #111C2B;
+  --muted: #5A6779;
+  --line: #D3DAE4;
+  --accent: #1E4ED6;
+  --bad: #BF3520;
+  --warn: #A86B12;
+  --good: #1D7449;
+  --track: #E3E8EF;
+  --font-display: "Familjen Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0C131D; --surface: #141E2B; --fg: #E4EAF2; --muted: #8E9BAE; --line: #253247;
+    --accent: #84A5FF; --bad: #FF7B64; --warn: #EDB257; --good: #5CCB8F; --track: #1C2838;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0C131D; --surface: #141E2B; --fg: #E4EAF2; --muted: #8E9BAE; --line: #253247;
+  --accent: #84A5FF; --bad: #FF7B64; --warn: #EDB257; --good: #5CCB8F; --track: #1C2838;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: var(--font-body); font-size: 15px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 40px 64px;
+}
+.wrap { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 40px; }
+h1, h2 { font-family: var(--font-display); text-wrap: balance; margin: 0; letter-spacing: -0.01em; }
+h1 { font-size: clamp(2rem, 6vw, 3rem); line-height: 1.05; font-weight: 700; }
+h2 { font-size: 1.35rem; font-weight: 700; }
+p { margin: 0; max-width: 65ch; }
+.eyebrow { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.lede { color: var(--muted); font-size: 1.05rem; }
+header { display: flex; flex-direction: column; gap: 12px; }
+section { display: flex; flex-direction: column; gap: 16px; }
+
+/* Input */
+.field { display: flex; gap: 8px; align-items: stretch; }
+.field input {
+  flex: 1; min-width: 0;
+  font-family: var(--font-mono); font-size: 1.35rem;
+  padding: 14px 16px; border-radius: 6px;
+  border: 1.5px solid var(--line); background: var(--surface); color: var(--fg);
+}
+.field input:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
+button {
+  font: 500 0.9rem var(--font-body); color: var(--fg);
+  background: var(--surface); border: 1.5px solid var(--line); border-radius: 6px;
+  padding: 10px 14px; cursor: pointer;
+}
+button:hover { border-color: var(--accent); }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button.primary { background: var(--accent); color: var(--surface); border-color: var(--accent); }
+.note { font-size: 0.85rem; color: var(--muted); }
+
+/* Readout */
+.readout { display: flex; flex-direction: column; gap: 6px; }
+.big { font-family: var(--font-display); font-weight: 700; font-size: clamp(1.7rem, 5vw, 2.4rem); line-height: 1.1; font-variant-numeric: tabular-nums; }
+.verdict { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.pill { font: 600 0.78rem var(--font-mono); letter-spacing: 0.04em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; border: 1.5px solid currentColor; }
+.pill.bad { color: var(--bad); } .pill.warn { color: var(--warn); } .pill.good { color: var(--good); }
+
+/* Ruler */
+.ruler { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 20px 18px 14px; display: flex; flex-direction: column; gap: 14px; }
+.tier { display: grid; grid-template-columns: 1fr; gap: 6px; }
+.tier-head { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 0.9rem; }
+.tier-head b { font-weight: 600; }
+.tier-head span { font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--muted); }
+.bar { position: relative; height: 10px; background: var(--track); border-radius: 3px; overflow: hidden; }
+.bar i { position: absolute; inset: 0 auto 0 0; border-radius: 3px; background: var(--accent); transition: width .35s ease; }
+.bar i.bad { background: var(--bad); } .bar i.warn { background: var(--warn); } .bar i.good { background: var(--good); }
+.ticks { position: relative; height: 30px; font: 0.7rem var(--font-mono); color: var(--muted); border-top: 1px dashed var(--line); }
+.ticks span { position: absolute; top: 6px; transform: translateX(-50%); white-space: nowrap; }
+.ticks span:first-child { transform: none; }
+.ticks span:last-child { transform: translateX(-100%); }
+
+/* Breakdown */
+.segs { display: flex; flex-wrap: wrap; gap: 8px; }
+.seg { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); min-width: 0; }
+.seg code { font: 500 1rem var(--font-mono); overflow-wrap: anywhere; }
+.seg small { font-size: 0.74rem; color: var(--muted); }
+.formula { font: 0.85rem var(--font-mono); color: var(--muted); overflow-wrap: anywhere; }
+ul.warns { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+ul.warns li { padding-left: 14px; border-left: 3px solid var(--warn); max-width: 65ch; }
+ul.warns li.bad { border-left-color: var(--bad); }
+
+/* Generator */
+.gen { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.gen-out { font: 500 1.15rem var(--font-mono); overflow-wrap: anywhere; padding: 12px; background: var(--bg); border-radius: 6px; user-select: all; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.seg-toggle { display: inline-flex; border: 1.5px solid var(--line); border-radius: 6px; overflow: hidden; }
+.seg-toggle button { border: 0; border-radius: 0; }
+.seg-toggle button[aria-pressed="true"] { background: var(--accent); color: var(--surface); }
+label.inline { display: inline-flex; gap: 8px; align-items: center; font-size: 0.9rem; }
+select { font: 0.9rem var(--font-body); padding: 8px; border-radius: 6px; border: 1.5px solid var(--line); background: var(--surface); color: var(--fg); }
+
+/* Limits */
+.limits { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+.limits div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.limits h3 { margin: 0; font: 600 0.95rem var(--font-body); }
+.limits p { font-size: 0.9rem; color: var(--muted); }
+footer { font-size: 0.8rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; }
+@media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">WPA2-Personal · offline attack</div>
+    <h1>How long would your WiFi password last?</h1>
+    <p class="lede">Anyone within radio range can record your router's handshake, take it home, and guess passwords on graphics cards with no limit on attempts. Type a password to see how long that takes. Nothing leaves this page: there is no network code in it.</p>
+  </header>
+
+  <section aria-labelledby="t-check">
+    <h2 id="t-check" class="eyebrow" style="font-family:var(--font-mono);font-size:.75rem;font-weight:400">Password to test</h2>
+    <div class="field">
+      <input id="pw" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" value="Summer2024!" aria-describedby="pw-note">
+      <button id="toggle" type="button" aria-pressed="true">Hide</button>
+    </div>
+    <p id="pw-note" class="note">The example is a typical "strong-looking" password. Replace it with yours or with one you're considering.</p>
+
+    <div class="readout" aria-live="polite">
+      <div class="note">One high-end gaming GPU would find it in</div>
+      <div class="big" id="headline">–</div>
+      <div class="verdict"><span class="pill" id="pill">–</span><span class="note" id="verdict-text"></span></div>
+    </div>
+
+    <div class="ruler" id="ruler">
+      <div class="ticks" aria-hidden="true">
+        <span style="left:0%">1 sec</span>
+        <span style="left:20.2%">1 hour</span>
+        <span style="left:42.6%">1 year</span>
+        <span style="left:76.6%">1M years</span>
+        <span style="left:100%">age of universe</span>
+      </div>
+    </div>
+    <p class="note">Speeds are approximate, taken from public hashcat benchmarks for WPA2 (mode 22000): about 2.5 million guesses per second on one current high-end card. WPA2 is slow to crack on purpose; the same GPU checks billions of plain MD5 hashes per second.</p>
+  </section>
+
+  <section aria-labelledby="t-how">
+    <h2 id="t-how">How an attacker would guess it</h2>
+    <p>Attackers don't try every combination. They start with leaked passwords and dictionary words, then add capitals, years and symbols in the places people put them. This page splits your password into the pieces such a guesser would try and multiplies their odds.</p>
+    <div class="segs" id="segs"></div>
+    <div class="formula" id="formula"></div>
+    <ul class="warns" id="warns"></ul>
+  </section>
+
+  <section aria-labelledby="t-gen">
+    <h2 id="t-gen">Make one that holds</h2>
+    <div class="gen">
+      <div class="row">
+        <div class="seg-toggle" role="group" aria-label="Generator style">
+          <button type="button" id="mode-words" aria-pressed="true">Words</button>
+          <button type="button" id="mode-chars" aria-pressed="false">Characters</button>
+        </div>
+        <label class="inline" for="gen-len">Length
+          <select id="gen-len"></select>
+        </label>
+      </div>
+      <div class="gen-out" id="gen-out"></div>
+      <div class="row">
+        <button type="button" class="primary" id="gen-new">New one</button>
+        <button type="button" id="gen-copy">Copy</button>
+        <button type="button" id="gen-use">Test it above</button>
+        <span class="note" id="gen-status" aria-live="polite"></span>
+      </div>
+      <p class="note" id="gen-math"></p>
+    </div>
+  </section>
+
+  <section aria-labelledby="t-limits">
+    <h2 id="t-limits">What this doesn't tell you</h2>
+    <div class="limits">
+      <div><h3>My word list is small</h3><p>It holds a few hundred common passwords and words. Real attackers use lists with billions of entries. A name or word I don't recognise is scored as random letters, which makes it look stronger than it is. The page flags those letters below the breakdown.</p></div>
+      <div><h3>Personal guesses aren't modelled</h3><p>A neighbour who knows your street, your kids' names or your router's model will try those first. Any of them in your password is worth much less than this page shows.</p></div>
+      <div><h3>WPS skips the password</h3><p>If WPS PIN pairing is on, older routers can be broken through the 8-digit PIN in hours, whatever your password is. Turn WPS off in the router settings.</p></div>
+      <div><h3>WPA3 changes the maths</h3><p>WPA3-SAE doesn't leak anything that can be cracked offline, so the times here don't apply. Many routers run WPA2/WPA3 mixed mode, though, and older devices still connect over WPA2.</p></div>
+    </div>
+  </section>
+
+  <footer>Estimates follow the approach of Dropbox's zxcvbn: find the cheapest way to split the password into known patterns, then count the guesses. They are rough to within a factor of ten or so. Treat the colour as the answer, not the digits.</footer>
+</div>
+
+<script id="engine">
+// ---------- Pattern-based guess estimator (log10 guesses) ----------
+const TOP = ("123456 password 12345678 qwerty 123456789 12345 1234 111111 1234567 dragon 123123 baseball abc123 football monkey letmein 696969 shadow master 666666 qwertyuiop 123321 mustang 1234567890 michael 654321 superman 1qaz2wsx 7777777 121212 000000 qazwsx 123qwe killer trustno1 jordan jennifer zxcvbnm asdfgh hunter buster soccer harley batman andrew tigger sunshine iloveyou charlie robert thomas hockey ranger daniel starwars 112233 george computer michelle jessica pepper zxcvbn 555555 11111111 131313 freedom 777777 maggie 159753 aaaaaa ginger princess joshua cheese amanda summer love ashley nicole chelsea biteme matthew access yankees 987654321 dallas austin thunder taylor matrix welcome admin internet wifi password1 qwerty123 iloveyou1 welcome1 admin123 changeme default guest letmein1 passw0rd secret").split(" ");
+const WORDS = ("home house family love baby angel happy lucky magic music money power smile sweet heart honey kitty puppy tiger lion eagle bear wolf horse rabbit monkey panda shark dolphin falcon phoenix dragon spider snake cobra viper apple banana orange lemon cherry mango peach grape melon coffee cookie candy sugar pizza burger pasta bread butter chocolate cream winter summer spring autumn sunny rain storm snow cloud thunder light night star moon earth ocean river beach island forest garden flower rose lily daisy tulip violet purple yellow green black white silver golden diamond crystal ruby pearl jewel queen king prince knight castle tower church school college office market street city london paris berlin tokyo dubai sydney boston texas china india africa europe america canada mexico brazil france spain italy japan korea russia england london soccer cricket tennis hockey rugby golf boxing racing runner player winner champion legend hero ninja pirate wizard warrior hunter ranger soldier captain doctor teacher pilot driver farmer artist poet writer singer dancer friend brother sister mother father daddy mommy family welcome hello world peace freedom faith hope grace glory spirit soul dream wish secret mystery shadow ghost demon devil angel heaven paradise jungle desert mountain valley canyon planet galaxy rocket space comet meteor laser robot cyber matrix pixel gamer gaming zombie monster alien turbo nitro diesel engine motor truck rider biker speed blaster thunder lightning fire flame blaze smoke stone rock metal steel iron copper gold platinum orange purple network router modem internet wireless signal access guest admin office kitchen garage window door table chair bottle candle mirror pillow blanket jacket shirt shoes summer basket guitar piano violin drums trumpet melody rhythm songs radio movie cinema camera photo video story book paper pencil letter number circle square triangle simple random master silver little big small great super ultra mega happy funny crazy cool hot cold blue red pink brown grey dark bright fresh quick slow strong brave proud wild free true real best first last only next family").split(" ");
+
+const RANK = new Map();
+TOP.forEach((w, i) => { if (!RANK.has(w)) RANK.set(w, i + 1); });
+WORDS.forEach((w, i) => { if (!RANK.has(w)) RANK.set(w, 150 + i * 12); });
+
+const L33T = { "4": "a", "@": "a", "3": "e", "!": "i", "0": "o", "$": "s", "5": "s", "7": "t", "+": "t", "8": "b", "9": "g" };
+const ROWS = ["`1234567890-=", "qwertyuiop[]\\", "asdfghjkl;'", "zxcvbnm,./"];
+const LOG = Math.log10;
+
+function card(s) {
+  let c = 0;
+  if (/[a-z]/.test(s)) c += 26;
+  if (/[A-Z]/.test(s)) c += 26;
+  if (/[0-9]/.test(s)) c += 10;
+  if (/[^a-zA-Z0-9]/.test(s)) c += 33;
+  return c || 10;
+}
+function nCk(n, k) { let r = 1; for (let i = 1; i <= k; i++) r = r * (n - k + i) / i; return r; }
+function caseMult(s) {
+  const U = (s.match(/[A-Z]/g) || []).length, L = (s.match(/[a-z]/g) || []).length;
+  if (U === 0) return 1;
+  if (L === 0) return 2;
+  if (/^[A-Z][^A-Z]+$/.test(s) || /^[^A-Z]+[A-Z]$/.test(s)) return 2;
+  let v = 0; for (let i = 1; i <= Math.min(U, L); i++) v += nCk(U + L, i);
+  return Math.max(v, 1);
+}
+function unl33t(lower) {
+  // '1' can stand for i or l, so return both readings.
+  const base = [...lower].map(ch => L33T[ch] || ch).join("");
+  return [base.replace(/1/g, "i"), base.replace(/1/g, "l")];
+}
+
+function bestMatch(sub, fullCard) {
+  const n = sub.length, lower = sub.toLowerCase();
+  const cands = [];
+  // brute force always available
+  // An attacker doesn't know which characters each chunk uses, so random chunks are scored with the whole password's character set.
+  cands.push({ kind: "random", log: n * LOG(fullCard), label: `${n} random from ${fullCard} characters` });
+  if (n >= 3) {
+    // dictionary (plain, l33t, reversed)
+    const cm = caseMult(sub);
+    if (RANK.has(lower)) cands.push({ kind: "word", log: LOG(RANK.get(lower) * cm), label: TOP.includes(lower) ? "leaked-password list" : "common word" + (cm > 1 ? " + capitals" : "") });
+    const rev = [...lower].reverse().join("");
+    if (RANK.has(rev)) cands.push({ kind: "word", log: LOG(RANK.get(rev) * cm * 2), label: "word spelled backwards" });
+    for (const u of unl33t(lower)) {
+      if (u !== lower && RANK.has(u)) {
+        const subs = [...lower].filter((ch, i) => ch !== u[i]).length;
+        cands.push({ kind: "word", log: LOG(RANK.get(u) * cm * 2 * (subs + 1)), label: `"${u}" with symbol swaps` });
+      }
+    }
+    // single repeated character
+    if (/^(.)\1+$/.test(sub)) cands.push({ kind: "repeat", log: LOG(card(sub) * n), label: "one character repeated" });
+    // sequences like abc, 4321
+    const d = sub.charCodeAt(1) - sub.charCodeAt(0);
+    if ((d === 1 || d === -1) && [...sub].every((c, i) => i === 0 || sub.charCodeAt(i) - sub.charCodeAt(i - 1) === d) && card(sub) <= 26) {
+      const base = /^[aAzZ019]/.test(sub) ? 4 : (/\d/.test(sub) ? 10 : 26);
+      cands.push({ kind: "sequence", log: LOG(base * n * (d < 0 ? 2 : 1)), label: "alphabet or number run" });
+    }
+  }
+  if (n >= 4) {
+    // keyboard row walks like qwer, asdf, 7890
+    const lk = lower;
+    const walk = ROWS.some(r => { for (let i = 1; i < n; i++) { const a = r.indexOf(lk[i - 1]), b = r.indexOf(lk[i]); if (a < 0 || b < 0 || Math.abs(a - b) !== 1) return false; } return true; });
+    if (walk) cands.push({ kind: "keyboard", log: LOG(100 * n * caseMult(sub)), label: "keys next to each other" });
+  }
+  if (/^\d+$/.test(sub)) {
+    if (n === 4 && +sub >= 1900 && +sub <= 2039) cands.push({ kind: "year", log: LOG(150), label: "a recent year" });
+    if (n === 2) cands.push({ kind: "year", log: LOG(100), label: "two-digit year or number" });
+    if ((n === 6 || n === 8) && looksLikeDate(sub)) cands.push({ kind: "date", log: LOG(n === 8 ? 165000 : 110000), label: "a date" });
+  }
+  return cands.reduce((a, b) => (b.log < a.log ? b : a));
+}
+function looksLikeDate(s) {
+  const y4 = s.length === 8;
+  const parts = y4 ? [[s.slice(0, 2), s.slice(2, 4), s.slice(4)], [s.slice(4, 6), s.slice(6), s.slice(0, 4)]] : [[s.slice(0, 2), s.slice(2, 4), s.slice(4)]];
+  return parts.some(([a, b, y]) => {
+    const A = +a, B = +b, Y = +y; const yok = y4 ? Y >= 1900 && Y <= 2039 : true;
+    return yok && ((A >= 1 && A <= 31 && B >= 1 && B <= 12) || (B >= 1 && B <= 31 && A >= 1 && A <= 12));
+  });
+}
+function logFact(k) { let s = 0; for (let i = 2; i <= k; i++) s += LOG(i); return s; }
+
+function estimate(pw) {
+  const n = pw.length;
+  if (!n) return { log: 0, segs: [] };
+  const span = [], fc = card(pw);
+  for (let i = 0; i < n; i++) { span[i] = []; for (let j = i + 1; j <= n; j++) span[i][j] = bestMatch(pw.slice(i, j), fc); }
+  // best[j][k] = min log10 guesses covering pw[0..j) with k pieces
+  const best = Array.from({ length: n + 1 }, () => new Array(n + 1).fill(Infinity));
+  const back = Array.from({ length: n + 1 }, () => new Array(n + 1).fill(-1));
+  best[0][0] = 0;
+  for (let j = 1; j <= n; j++) for (let i = 0; i < j; i++) for (let k = 0; k < j; k++) {
+    if (best[i][k] === Infinity) continue;
+    const v = best[i][k] + span[i][j].log;
+    if (v < best[j][k + 1]) { best[j][k + 1] = v; back[j][k + 1] = i; }
+  }
+  let bk = 1, bl = Infinity;
+  for (let k = 1; k <= n; k++) { const t = best[n][k] + logFact(k); if (t < bl) { bl = t; bk = k; } }
+  const segs = []; let j = n, k = bk;
+  while (j > 0) { const i = back[j][k]; segs.unshift({ text: pw.slice(i, j), ...span[i][j] }); j = i; k--; }
+  return { log: bl, segs, orderLog: logFact(bk) };
+}
+</script>
+
+<script>
+// ---------- UI ----------
+const TIERS = [
+  { name: "One high-end gaming GPU", rate: 2.5e6 },
+  { name: "Eight-GPU cracking rig", rate: 2.0e7 },
+  { name: "1,000 rented cloud GPUs", rate: 2.5e9 },
+];
+const UNIVERSE_LOG = Math.log10(4.35e17);
+const $ = id => document.getElementById(id);
+
+function human(log10s) {
+  if (log10s < 0) return "under a second";
+  if (log10s > UNIVERSE_LOG) return "longer than the universe has existed";
+  const s = Math.pow(10, log10s);
+  const units = [["year", 31557600], ["day", 86400], ["hour", 3600], ["minute", 60], ["second", 1]];
+  const [name, size] = units.find(([, u]) => s >= u);
+  const v = s / size;
+  if (name === "year") {
+    if (v >= 1e9) return `${fmt(v / 1e9)} billion years`;
+    if (v >= 1e6) return `${fmt(v / 1e6)} million years`;
+    if (v >= 1e3) return `${fmt(v / 1e3)} thousand years`;
+  }
+  const r = Math.round(v);
+  return `${r} ${name}${r === 1 ? "" : "s"}`;
+}
+function fmt(x) { return x >= 100 ? Math.round(x).toString() : x.toFixed(x >= 10 ? 0 : 1); }
+function sci(log) {
+  if (log < 6) return Math.round(Math.pow(10, log)).toLocaleString("en-US");
+  const e = Math.floor(log), m = Math.pow(10, log - e);
+  return `${m.toFixed(1)} × 10^${e}`;
+}
+function severity(log10s) {
+  if (log10s < Math.log10(86400 * 30)) return "bad";
+  if (log10s < Math.log10(86400 * 365.25 * 1000)) return "warn";
+  return "good";
+}
+
+// build ruler rows once
+const ruler = $("ruler"), ticks = ruler.querySelector(".ticks");
+TIERS.forEach((t, i) => {
+  const row = document.createElement("div");
+  row.className = "tier";
+  row.innerHTML = `<div class="tier-head"><b>${t.name}</b><span id="t${i}"></span></div><div class="bar"><i id="b${i}"></i></div>`;
+  ruler.insertBefore(row, ticks);
+});
+
+let hidden = false;
+function render() {
+  const pw = $("pw").value;
+  const est = estimate(pw);
+  const secs = TIERS.map(t => est.log - Math.log10(t.rate));
+  const cloudSev = severity(secs[2]);
+
+  $("headline").textContent = pw ? human(secs[0]) : "–";
+  const pill = $("pill");
+  pill.className = "pill " + (pw ? cloudSev : "");
+  pill.textContent = !pw ? "–" : cloudSev === "bad" ? "Crackable" : cloudSev === "warn" ? "Costly to crack" : "Out of reach";
+  $("verdict-text").textContent = !pw ? "" :
+    cloudSev === "bad" ? "Someone renting cloud GPUs gets it within a month." :
+    cloudSev === "warn" ? "Safe from a hobbyist, but within reach of a well-funded attacker or future hardware." :
+    "Even 1,000 cloud GPUs would need over a thousand years.";
+
+  secs.forEach((s, i) => {
+    const pct = Math.max(1.5, Math.min(100, (Math.max(0, s) / UNIVERSE_LOG) * 100));
+    const b = $("b" + i);
+    b.style.width = pw ? pct + "%" : "0%";
+    b.className = severity(s);
+    $("t" + i).textContent = pw ? human(s) : "";
+  });
+
+  // breakdown
+  const segs = $("segs"); segs.replaceChildren();
+  for (const sg of est.segs) {
+    const el = document.createElement("div"); el.className = "seg";
+    const c = document.createElement("code"); c.textContent = hidden ? "•".repeat(sg.text.length) : sg.text;
+    const k = document.createElement("small"); k.textContent = sg.label;
+    const g = document.createElement("small"); g.textContent = "1 in " + sci(sg.log);
+    el.append(c, k, g); segs.append(el);
+  }
+  $("formula").textContent = est.segs.length
+    ? `${est.segs.map(s => sci(s.log)).join(" × ")}${est.segs.length > 1 ? ` × ${Math.round(Math.pow(10, est.orderLog)).toLocaleString("en-US")} ways to order ${est.segs.length} pieces` : ""} ≈ ${sci(est.log)} guesses`
+    : "";
+
+  // warnings
+  const w = [];
+  if (pw && pw.length < 8) w.push(["bad", "WPA2 needs 8 to 63 characters, so your router won't accept this one."]);
+  if (pw.length > 63) w.push(["bad", "WPA2 accepts at most 63 characters; your router will reject this or cut it short."]);
+  if (/^\d{8,12}$/.test(pw)) w.push(["bad", `Digits only. Many router stickers use passwords like this, and attackers know it: every ${pw.length}-digit number can be tried in ${human(pw.length - Math.log10(TIERS[0].rate))} on one GPU.`]);
+  if (/^[0-9a-f]{8,16}$/i.test(pw) && !/^\d+$/.test(pw) && /\d/.test(pw)) w.push(["warn", "This looks like a hexadecimal factory default. Attackers keep masks for common router brands, so it may fall faster than shown."]);
+  for (const sg of est.segs) {
+    const runs = sg.kind === "random" ? sg.text.match(/[a-zA-Z]{4,}/g) || [] : [];
+    for (const r of runs) if (/[aeiouy]/i.test(r)) w.push(["warn", `I couldn't match "${hidden ? "•".repeat(r.length) : r}" to a word. If it's a real word or a name, the true time is much shorter.`]);
+  }
+  if (est.segs.some(s => s.kind === "word") && est.segs.some(s => s.kind === "year")) w.push(["warn", "Word plus year is the first pattern crackers try after leaked lists. A symbol on the end barely helps."]);
+  const ul = $("warns"); ul.replaceChildren(...w.map(([cls, t]) => { const li = document.createElement("li"); li.className = cls; li.textContent = t; return li; }));
+}
+
+$("pw").addEventListener("input", render);
+$("toggle").addEventListener("click", () => {
+  hidden = !hidden;
+  $("pw").type = hidden ? "password" : "text";
+  $("toggle").textContent = hidden ? "Show" : "Hide";
+  $("toggle").setAttribute("aria-pressed", String(!hidden));
+  render();
+});
+
+// ---------- Generator ----------
+const GEN_WORDS = [...new Set(WORDS.filter(w => w.length >= 4 && w.length <= 8))];
+const GEN_CHARS = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+let mode = "words";
+function randInt(n) { // unbiased via rejection sampling
+  const lim = Math.floor(0x100000000 / n) * n, buf = new Uint32Array(1);
+  do crypto.getRandomValues(buf); while (buf[0] >= lim);
+  return buf[0] % n;
+}
+function fillLen() {
+  const sel = $("gen-len");
+  const opts = mode === "words" ? [6, 7, 8, 9, 10] : [12, 14, 16, 20, 24];
+  const def = mode === "words" ? 8 : 16;
+  sel.replaceChildren(...opts.map(v => { const o = document.createElement("option"); o.value = v; o.textContent = mode === "words" ? `${v} words` : `${v} characters`; o.selected = v === def; return o; }));
+}
+function generate() {
+  const n = +$("gen-len").value;
+  let out, bits;
+  if (mode === "words") {
+    out = Array.from({ length: n }, () => GEN_WORDS[randInt(GEN_WORDS.length)]).join("-");
+    bits = n * Math.log2(GEN_WORDS.length);
+  } else {
+    out = Array.from({ length: n }, () => GEN_CHARS[randInt(GEN_CHARS.length)]).join("");
+    bits = n * Math.log2(GEN_CHARS.length);
+  }
+  $("gen-out").textContent = out;
+  const log = bits * Math.log10(2) - Math.log10(TIERS[2].rate);
+  const pool = mode === "words" ? `${GEN_WORDS.length} words` : `${GEN_CHARS.length} characters (no look-alikes such as l, 1, O and 0)`;
+  $("gen-math").textContent = `Drawn with your browser's cryptographic random generator from ${pool}: exactly ${bits.toFixed(1)} bits, or ${sci(bits * Math.log10(2))} possibilities. Against 1,000 cloud GPUs that is ${human(log)}, even if the attacker has this exact list. The checker above may show a bigger number, because it doesn't know the words came from this list.` + (mode === "words" ? " My list is short, so each word adds only about 8 bits. A standard 7,776-word diceware list gives about 13 bits per word, and six of those words are enough." : "");
+  $("gen-status").textContent = "";
+}
+function setMode(m) {
+  mode = m;
+  $("mode-words").setAttribute("aria-pressed", String(m === "words"));
+  $("mode-chars").setAttribute("aria-pressed", String(m === "chars"));
+  fillLen(); generate();
+}
+$("mode-words").addEventListener("click", () => setMode("words"));
+$("mode-chars").addEventListener("click", () => setMode("chars"));
+$("gen-len").addEventListener("change", generate);
+$("gen-new").addEventListener("click", generate);
+$("gen-use").addEventListener("click", () => { $("pw").value = $("gen-out").textContent; render(); $("pw").scrollIntoView({ behavior: "smooth", block: "center" }); });
+$("gen-copy").addEventListener("click", () => {
+  const t = $("gen-out").textContent;
+  navigator.clipboard.writeText(t).then(() => { $("gen-status").textContent = "Copied"; }).catch(() => {
+    const r = document.createRange(); r.selectNodeContents($("gen-out"));
+    const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+    $("gen-status").textContent = "Selected. Press Ctrl+C or ⌘C to copy.";
+  });
+});
+
+setMode("words");
+render();
+</script>
