@@ -1,5 +1,5 @@
 {
-  "_howto": "Each saying has one or more 'parts' (lines). A part is shown on screen while it is spoken. Each part needs shahmukhi, gurmukhi, roman and english. Set 'checked' to true only after a fluent reader has compared the saying with a published source.",
+  "_howto": "Each saying has one or more 'parts' (lines). A part is shown on screen while it is spoken. Each part needs shahmukhi; roman and english are strongly recommended. Set 'checked' to true only after a fluent reader has compared the saying with a published source.",
   "sayings": [
     {
       "poet": "Bulleh Shah",
@@ -8,7 +8,6 @@
       "parts": [
         {
           "shahmukhi": "بلھیا کیہ جاناں میں کون",
-          "gurmukhi": "ਬੁੱਲ੍ਹਿਆ ਕੀ ਜਾਣਾਂ ਮੈਂ ਕੌਣ",
           "roman": "Bulleya ki jaana main kaun",
           "english": "Bulleh, what do I know of who I am?"
         }
@@ -21,7 +20,6 @@
       "parts": [
         {
           "shahmukhi": "پڑھ پڑھ علم ہزار کتاباں، کدی اپنے آپ نوں پڑھیا ای نہیں",
-          "gurmukhi": "ਪੜ੍ਹ ਪੜ੍ਹ ਇਲਮ ਹਜ਼ਾਰ ਕਿਤਾਬਾਂ, ਕਦੀ ਆਪਣੇ ਆਪ ਨੂੰ ਪੜ੍ਹਿਆ ਈ ਨਹੀਂ",
           "roman": "Parh parh ilm hazaar kitaabaan, kadi apne aap nu parhiya ee nahin",
           "english": "You have read a thousand books, yet never once read yourself."
         }
@@ -34,7 +32,6 @@
       "parts": [
         {
           "shahmukhi": "علموں بس کریں او یار",
-          "gurmukhi": "ਇਲਮੋਂ ਬੱਸ ਕਰੀਂ ਓ ਯਾਰ",
           "roman": "Ilmon bas kareen o yaar",
           "english": "Enough of book-learning, my friend."
         }
@@ -47,7 +44,6 @@
       "parts": [
         {
           "shahmukhi": "وارث شاہ نہ عادتاں جاندیاں نیں، بھاویں کٹیے پوریاں پوریاں جی",
-          "gurmukhi": "ਵਾਰਿਸ ਸ਼ਾਹ ਨਾ ਆਦਤਾਂ ਜਾਂਦੀਆਂ ਨੇ, ਭਾਵੇਂ ਕੱਟੀਏ ਪੋਰੀਆਂ ਪੋਰੀਆਂ ਜੀ",
           "roman": "Waris Shah na aadataan jaandiyaan ne, bhaaven katiye poriyaan poriyaan ji",
           "english": "Habits never leave us, Waris Shah, even if you cut us joint by joint."
         }
@@ -60,7 +56,6 @@
       "parts": [
         {
           "shahmukhi": "مائی نی میں کینوں آکھاں، درد وچھوڑے دا حال",
-          "gurmukhi": "ਮਾਈ ਨੀ ਮੈਂ ਕਿਹਨੂੰ ਆਖਾਂ, ਦਰਦ ਵਿਛੋੜੇ ਦਾ ਹਾਲ",
           "roman": "Maai ni main kinnu aakhaan, dard vichhore da haal",
           "english": "Mother, who can I tell of the ache of being apart?"
         }
@@ -73,7 +68,6 @@
       "parts": [
         {
           "shahmukhi": "الف اللہ چنبے دی بوٹی، مرشد من وچ لائی ہو",
-          "gurmukhi": "ਅਲਫ਼ ਅੱਲ੍ਹਾ ਚੰਬੇ ਦੀ ਬੂਟੀ, ਮੁਰਸ਼ਦ ਮਨ ਵਿਚ ਲਾਈ ਹੂ",
           "roman": "Alif Allah chambe di booti, murshid man vich laai Hu",
           "english": "My teacher planted the name of God in my heart like a jasmine sapling."
         }
@@ -86,7 +80,6 @@
       "parts": [
         {
           "shahmukhi": "مسجد ڈھا دے، مندر ڈھا دے، ڈھا دے جو کجھ ڈھیندا، پر کسے دا دل نہ ڈھاویں، رب دلاں وچ رہندا",
-          "gurmukhi": "ਮਸਜਿਦ ਢਾਹ ਦੇ, ਮੰਦਰ ਢਾਹ ਦੇ, ਢਾਹ ਦੇ ਜੋ ਕੁਝ ਢਹਿੰਦਾ, ਪਰ ਕਿਸੇ ਦਾ ਦਿਲ ਨਾ ਢਾਹੀਂ, ਰੱਬ ਦਿਲਾਂ ਵਿਚ ਰਹਿੰਦਾ",
           "roman": "Masjid dha de, mandir dha de, dha de jo kujh dhainda, par kise da dil na dhaaveen, Rabb dilaan vich rehnda",
           "english": "Tear down the mosque, tear down the temple, tear down whatever falls, but never break a heart, for God lives in hearts."
         }
@@ -99,7 +92,6 @@
       "parts": [
         {
           "shahmukhi": "جیہڑے گجدے نیں، اوہ وسدے نہیں",
-          "gurmukhi": "ਜਿਹੜੇ ਗੱਜਦੇ ਨੇ, ਉਹ ਵੱਸਦੇ ਨਹੀਂ",
           "roman": "Jehre gajjde ne, oh vassde nahin",
           "english": "The clouds that thunder are not the ones that rain."
         }
@@ -112,7 +104,6 @@
       "parts": [
         {
           "shahmukhi": "دور دے ڈھول سہانے",
-          "gurmukhi": "ਦੂਰ ਦੇ ਢੋਲ ਸੁਹਾਵਣੇ",
           "roman": "Door de dhol suhaavane",
           "english": "Drums always sound sweeter from far away."
         }

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Reel Studio</title>
-<meta name="description" content="Make Punjabi reels: each saying in Shahmukhi and Gurmukhi, with the reading and meaning, over the voice that speaks it.">
+<meta name="description" content="Make Punjabi reels: each saying in Shahmukhi, with the reading and meaning, over the voice that speaks it.">
 <meta name="theme-color" content="#1A0909">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
@@ -12,14 +12,14 @@
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anek+Gurmukhi:wght@600&family=Cormorant+Garamond:ital,wght@1,600&family=Mukta:wght@400;600&family=Noto+Nastaliq+Urdu:wght@700&family=Noto+Sans+Gurmukhi:wght@600&display=swap">
-<link rel="stylesheet" href="style.css?v=3">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,600&family=Mukta:wght@400;600&family=Noto+Nastaliq+Urdu:wght@700&display=swap">
+<link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
 <main class="app">
   <header class="top">
     <h1>Reel Studio</h1>
-    <p class="sub">One saying, two scripts. <span lang="pnb" dir="rtl">پنجابی</span> · <span lang="pa">ਪੰਜਾਬੀ</span></p>
+    <p class="sub">Punjabi wisdom in Shahmukhi · <span lang="pnb" dir="rtl">پنجابی</span></p>
   </header>
 
   <div class="preview">
@@ -45,11 +45,11 @@
     <p id="check-warn" class="warn" hidden>Not checked yet. Compare both scripts with a published source before posting.</p>
 
     <fieldset>
-      <legend>Sound</legend>
+      <legend>Voice</legend>
       <div class="choices">
         <label class="choice"><input type="radio" name="sound" value="upload"><span><b>Upload a recording</b>A voice note or video someone sent you. The reel lasts as long as the recording.</span></label>
         <label class="choice"><input type="radio" name="sound" value="live"><span><b>Record my voice now</b>Speak into the phone and tap as you start each line.</span></label>
-        <label class="choice"><input type="radio" name="sound" value="none"><span><b>No sound</b>Lines are timed automatically. You can add a voiceover in Instagram later.</span></label>
+        <label class="choice"><input type="radio" name="sound" value="none"><span><b>No voice</b>Lines are timed automatically. You can add a voiceover in Instagram later.</span></label>
       </div>
       <div id="upload-box" class="subbox" hidden>
         <label for="audio-file">Recording (audio or video file)</label>
@@ -58,6 +58,39 @@
         <button type="button" id="btn-timing" class="small-btn" hidden>Time the lines</button>
       </div>
       <p id="live-note" class="hint" hidden>After the countdown, a big button appears under the preview. Tap it as you start each line, then tap Finish.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Music</legend>
+      <div class="choices">
+        <label class="choice"><input type="radio" name="music" value="drone"><span><b>Tanpura drone</b>A soft string drone, generated in the app. Free to use, no copyright.</span></label>
+        <label class="choice"><input type="radio" name="music" value="file"><span><b>My music file</b>Only music you have the rights to, or a reel can be muted.</span></label>
+        <label class="choice"><input type="radio" name="music" value="none"><span><b>No music</b>Or add licensed music from Instagram's library when you post.</span></label>
+      </div>
+      <div id="drone-box" class="subbox" hidden>
+        <label for="drone-key">Drone pitch (match the reciter's voice)</label>
+        <select id="drone-key">
+          <option value="130.81">C, low voices</option>
+          <option value="138.59">C#, most men's voices</option>
+          <option value="146.83">D</option>
+          <option value="155.56">D#</option>
+          <option value="164.81">E</option>
+          <option value="174.61">F</option>
+          <option value="196.00">G, higher voices</option>
+          <option value="207.65">G#, most women's voices</option>
+          <option value="220.00">A</option>
+        </select>
+      </div>
+      <div id="music-file-box" class="subbox" hidden>
+        <label for="music-file">Music file</label>
+        <input id="music-file" type="file" accept="audio/*">
+        <p id="music-file-status" class="hint"></p>
+      </div>
+      <div id="level-box" class="subbox" hidden>
+        <label for="music-level">Music volume under the voice: <output id="music-level-out" for="music-level">30%</output></label>
+        <input id="music-level" type="range" min="5" max="100" step="5" value="30">
+        <p class="hint">Fades in at the start and out at the end. When recording your voice live, the music goes into the video only, not out of the speaker.</p>
+      </div>
     </fieldset>
 
     <fieldset>
@@ -107,13 +140,11 @@
 <section id="editor" class="sheet" hidden aria-labelledby="editor-title">
   <div class="sheet-inner">
     <h2 id="editor-title">Saying</h2>
-    <p class="hint">Put each line on its own row. Row 1 of each box belongs together, then row 2, and so on. Each row becomes one screen of the reel.</p>
+    <p class="hint">Put each line on its own row. Row 1 of each box belongs together (Shahmukhi, romanised, English), then row 2, and so on. Each row becomes one screen of the reel.</p>
     <label for="ed-poet">Poet or source</label>
     <input id="ed-poet" type="text" placeholder="Bulleh Shah, Punjabi proverb, Grandmother in Sialkot…">
     <label for="ed-sm">Shahmukhi</label>
     <textarea id="ed-sm" rows="3" dir="rtl" lang="pnb" class="sm"></textarea>
-    <label for="ed-gm">Gurmukhi</label>
-    <textarea id="ed-gm" rows="3" lang="pa" class="gm"></textarea>
     <label for="ed-ro">Romanised (optional)</label>
     <textarea id="ed-ro" rows="3"></textarea>
     <label for="ed-en">English meaning (optional)</label>
@@ -130,6 +161,6 @@
     </div>
   </div>
 </section>
-<script src="studio.js?v=3"></script>
+<script src="studio.js?v=5"></script>
 </body>
 </html>

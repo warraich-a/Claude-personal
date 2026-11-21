@@ -79,5 +79,5 @@ button:disabled { opacity: 0.45; cursor: default; }
 .timing-list { margin: 0; padding-left: 1.4em; display: flex; flex-direction: column; gap: 6px; font: italic 600 1.1rem var(--display); color: var(--muted); }
 .timing-list li.done { color: var(--gold); }
 textarea.sm { font-family: "Noto Nastaliq Urdu", serif; line-height: 2.1; }
-textarea.gm { font-family: "Anek Gurmukhi", "Noto Sans Gurmukhi", sans-serif; }
 .is-recording .controls, .is-recording .top, .is-recording .result { display: none; }
+input[type="range"] { width: 100%; accent-color: var(--gold); }
