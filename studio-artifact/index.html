@@ -1,0 +1,1258 @@
+<title>Punjabi Reel Studio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,600&family=Mukta:wght@400;600&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap">
+<style>
+/* Layout: one phone-width column with three tabs (Library, Studio, Media) on a madder-red workroom,
+   the colour of phulkari cloth in shadow. Gold silk is the only accent. */
+:root {
+  --ground: #1A0909;
+  --panel: #261111;
+  --panel-2: #301614;
+  --line: #4A2420;
+  --text: #FBEFD9;
+  --muted: #C7AE95;
+  --gold: #F2B636;
+  --ok: #8FD694;
+  --warn: #FFB27A;
+  --ui: "Mukta", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --display: "Cormorant Garamond", Georgia, serif;
+  --sm: "Noto Nastaliq Urdu", serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { background: var(--ground); }
+body { margin: 0; color: var(--text); font: 16px/1.5 var(--ui); }
+[hidden] { display: none !important; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--ground); }
+.app { max-width: 560px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 48px; }
+header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--ground); padding-block: 12px 10px; display: flex; flex-direction: column; gap: 10px; border-bottom: 1px solid var(--line); }
+.brand { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+h1 { margin: 0; font: italic 600 1.7rem/1.1 var(--display); color: var(--gold); }
+.brand .sm-word { font: 700 1.2rem/1 var(--sm); color: var(--muted); }
+nav.tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+nav.tabs a { text-align: center; text-decoration: none; color: var(--muted); font-weight: 600; padding: 8px 6px; border-radius: 10px; border: 1px solid var(--line); }
+nav.tabs a[aria-current="page"] { color: #2A0E08; background: var(--gold); border-color: var(--gold); }
+nav.tabs a:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.count { font-variant-numeric: tabular-nums; opacity: .8; }
+
+main section.view { display: flex; flex-direction: column; gap: 14px; padding-top: 16px; }
+h2 { margin: 0; font: italic 600 1.45rem var(--display); color: var(--gold); }
+h3 { margin: 0; font: 600 1rem var(--ui); }
+p { margin: 0; }
+.hint { font-size: 0.87rem; color: var(--muted); }
+.warn { font-size: 0.87rem; color: var(--warn); }
+.banner { padding: 10px 12px; border-radius: 10px; background: var(--panel); border: 1px solid var(--line); font-size: 0.9rem; color: var(--warn); }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+label { font-size: 0.85rem; color: var(--muted); }
+select, input[type="text"], input[type="url"], textarea, input[type="file"] {
+  width: 100%; font: 1rem var(--ui); color: var(--text);
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;
+}
+textarea { line-height: 1.5; resize: vertical; }
+textarea.sm { font-family: var(--sm); line-height: 2.1; }
+input[type="range"] { width: 100%; accent-color: var(--gold); }
+.check { display: flex; gap: 10px; align-items: center; color: var(--text); font-size: 0.95rem; }
+.check input { width: 20px; height: 20px; accent-color: var(--gold); }
+button, .button {
+  font: 600 0.92rem var(--ui); color: var(--text); text-decoration: none; background: transparent;
+  border: 1px solid var(--line); border-radius: 999px; padding: 9px 16px; cursor: pointer;
+}
+button.primary { background: var(--gold); border-color: var(--gold); color: #2A0E08; }
+button.small { padding: 6px 12px; font-size: 0.85rem; }
+button.danger { color: var(--warn); }
+button:disabled { opacity: 0.45; cursor: default; }
+button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.box { display: flex; flex-direction: column; gap: 10px; padding: 14px; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; }
+
+/* library */
+.filters { display: flex; gap: 6px; flex-wrap: wrap; }
+.filters button[aria-pressed="true"] { border-color: var(--gold); color: var(--gold); }
+.cards { display: flex; flex-direction: column; gap: 10px; }
+.card { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; }
+.card.approved { border-left: 4px solid var(--ok); }
+.card.candidate { border-left: 4px solid var(--warn); }
+.card.rejected { opacity: 0.6; }
+.card .sm-line { font: 700 1.35rem/2.1 var(--sm); direction: rtl; text-align: right; overflow-wrap: anywhere; }
+.card .roman { font: italic 600 1.1rem/1.35 var(--display); color: var(--gold); }
+.meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 0.82rem; color: var(--muted); }
+.pill { font-size: 0.72rem; letter-spacing: 0.05em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; border: 1px solid currentColor; }
+.pill.approved { color: var(--ok); } .pill.candidate { color: var(--warn); } .pill.rejected { color: var(--muted); }
+.details { display: flex; flex-direction: column; gap: 8px; border-top: 1px dashed var(--line); padding-top: 8px; }
+.part { display: flex; flex-direction: column; gap: 2px; }
+.part .sm-line { font-size: 1.15rem; }
+.part .en { font-size: 0.92rem; }
+.sources { margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 4px; font-size: 0.88rem; }
+.sources a { color: var(--gold); overflow-wrap: anywhere; }
+.empty { padding: 18px; text-align: center; color: var(--muted); border: 1px dashed var(--line); border-radius: 14px; }
+.confirm { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 0.88rem; color: var(--warn); }
+
+/* studio */
+.preview { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+#stage { display: block; width: 100%; max-width: min(100%, calc(60vh * 9 / 16)); aspect-ratio: 9 / 16; height: auto; border-radius: 14px; border: 1px solid var(--line); background: #000; }
+.cue { min-height: 1.5em; font: italic 600 1.2rem var(--display); color: var(--gold); text-align: center; }
+.choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.choice { display: flex; gap: 8px; align-items: flex-start; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); color: var(--text); cursor: pointer; font-size: 0.9rem; min-width: 0; }
+.choice:has(input:checked) { border-color: var(--gold); }
+.choice input { margin-top: 4px; accent-color: var(--gold); flex: none; }
+.sub { display: flex; flex-direction: column; gap: 8px; }
+.timing-list { margin: 0; padding-left: 1.4em; display: flex; flex-direction: column; gap: 4px; font: italic 600 1.05rem var(--display); color: var(--muted); }
+.timing-list li.done { color: var(--gold); }
+button.big { width: 100%; padding: 16px; font-size: 1.1rem; }
+.result video { width: 100%; max-height: 65vh; background: #000; border-radius: 12px; }
+.is-recording header.top, .is-recording .studio-controls, .is-recording .result { display: none; }
+
+/* media */
+.shelf { display: flex; flex-direction: column; gap: 8px; }
+.item { display: flex; gap: 10px; align-items: center; padding: 10px 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
+.item .thumb { width: 44px; height: 44px; flex: none; border-radius: 8px; object-fit: cover; background: var(--panel-2); display: grid; place-items: center; color: var(--muted); font-size: 0.75rem; }
+.item .info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.item .name { font-weight: 600; overflow-wrap: anywhere; }
+progress { width: 100%; accent-color: var(--gold); }
+
+.sheet { position: fixed; inset: 0; z-index: 20; overflow-y: auto; background: var(--ground);
+  padding: calc(16px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.sheet-inner { max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+
+<div class="app">
+  <header class="top">
+    <div class="brand"><h1>Punjabi Reel Studio</h1><span class="sm-word" lang="pnb" dir="rtl">پنجابی</span></div>
+    <nav class="tabs" aria-label="Sections">
+      <a href="#library" data-view="library">Library <span class="count" id="count-review"></span></a>
+      <a href="#studio" data-view="studio">Studio</a>
+      <a href="#media" data-view="media">Media</a>
+    </nav>
+  </header>
+  <p id="offline" class="banner" hidden></p>
+
+  <main>
+    <!-- LIBRARY -->
+    <section class="view" id="view-library" aria-labelledby="h-library">
+      <div class="row" style="justify-content: space-between">
+        <h2 id="h-library">Library</h2>
+        <button type="button" id="btn-add" class="small">Add a saying</button>
+      </div>
+      <p class="hint">Sayings found in research arrive here as <b>To review</b>. Approve one only after a fluent reader has compared it with its source. Only approved sayings should go on the channel.</p>
+      <div class="filters" role="group" aria-label="Show">
+        <button type="button" class="small" data-filter="candidate" aria-pressed="true">To review</button>
+        <button type="button" class="small" data-filter="approved" aria-pressed="false">Approved</button>
+        <button type="button" class="small" data-filter="rejected" aria-pressed="false">Rejected</button>
+        <button type="button" class="small" data-filter="all" aria-pressed="false">All</button>
+      </div>
+      <div class="cards" id="cards"><p class="empty">Loading the library…</p></div>
+    </section>
+
+    <!-- STUDIO -->
+    <section class="view" id="view-studio" aria-labelledby="h-studio" hidden>
+      <h2 id="h-studio" class="studio-controls">Studio</h2>
+      <div class="preview">
+        <canvas id="stage" width="1080" height="1920" aria-label="Reel preview"></canvas>
+        <p id="cue" class="cue" aria-live="assertive"></p>
+      </div>
+      <div class="studio-controls box" style="gap: 12px">
+        <div class="row">
+          <button type="button" id="btn-preview">Play preview</button>
+          <button type="button" id="btn-record" class="primary">Make reel</button>
+          <span id="length" class="hint"></span>
+        </div>
+        <p id="status" class="warn" aria-live="polite"></p>
+
+        <div class="field">
+          <label for="saying">Saying</label>
+          <select id="saying"></select>
+          <p id="saying-warn" class="warn" hidden>This saying isn't approved yet. Don't post it until it has been checked against its source.</p>
+        </div>
+
+        <div class="field">
+          <label>Voice</label>
+          <div class="choices" role="radiogroup" aria-label="Voice">
+            <label class="choice"><input type="radio" name="voice" value="library"><span>From the media shelf</span></label>
+            <label class="choice"><input type="radio" name="voice" value="file"><span>A file on this phone</span></label>
+            <label class="choice"><input type="radio" name="voice" value="none"><span>No voice</span></label>
+          </div>
+          <div class="sub" id="voice-library-box" hidden>
+            <select id="voice-pick" aria-label="Voice recording"></select>
+          </div>
+          <div class="sub" id="voice-file-box" hidden>
+            <input id="voice-file" type="file" accept="audio/*,video/*" aria-label="Voice recording file">
+          </div>
+          <p id="timing-status" class="hint"></p>
+          <div class="row"><button type="button" id="btn-timing" class="small" hidden>Time the lines</button></div>
+        </div>
+
+        <div class="field">
+          <label>Music</label>
+          <div class="choices" role="radiogroup" aria-label="Music">
+            <label class="choice"><input type="radio" name="music" value="tanpura"><span>Tanpura drone</span></label>
+            <label class="choice"><input type="radio" name="music" value="harmonium"><span>Harmonium drone</span></label>
+            <label class="choice"><input type="radio" name="music" value="library"><span>From the media shelf</span></label>
+            <label class="choice"><input type="radio" name="music" value="file"><span>A file on this phone</span></label>
+            <label class="choice"><input type="radio" name="music" value="none"><span>No music</span></label>
+          </div>
+          <div class="sub" id="music-key-box" hidden>
+            <label for="music-key">Pitch, to match the reciter's voice</label>
+            <select id="music-key">
+              <option value="130.81">C, low voices</option>
+              <option value="138.59">C#, most men</option>
+              <option value="146.83">D</option>
+              <option value="155.56">D#</option>
+              <option value="164.81">E</option>
+              <option value="174.61">F</option>
+              <option value="196.00">G, higher voices</option>
+              <option value="207.65">G#, most women</option>
+              <option value="220.00">A</option>
+            </select>
+          </div>
+          <div class="sub" id="music-library-box" hidden><select id="music-pick" aria-label="Music track"></select></div>
+          <div class="sub" id="music-file-box" hidden><input id="music-file" type="file" accept="audio/*,video/*" aria-label="Music file"></div>
+          <div class="sub" id="music-level-box">
+            <label for="music-level">Music volume under the voice: <output id="music-level-out" for="music-level">30%</output></label>
+            <input id="music-level" type="range" min="5" max="100" step="5" value="30">
+          </div>
+          <p class="hint">Generated drones are free to use. Use other music only if you have the rights, or the reel can be muted. Instagram's own music library is another safe option when you post.</p>
+        </div>
+
+        <div class="field">
+          <label>Background</label>
+          <div class="choices" role="radiogroup" aria-label="Background">
+            <label class="choice"><input type="radio" name="bg" value="phulkari"><span>Phulkari</span></label>
+            <label class="choice"><input type="radio" name="bg" value="sarson"><span>Sarson at dusk</span></label>
+            <label class="choice"><input type="radio" name="bg" value="diya"><span>Diya lights</span></label>
+            <label class="choice"><input type="radio" name="bg" value="rivers"><span>Five rivers</span></label>
+            <label class="choice"><input type="radio" name="bg" value="library"><span>From the media shelf</span></label>
+            <label class="choice"><input type="radio" name="bg" value="file"><span>A file on this phone</span></label>
+          </div>
+          <div class="sub" id="bg-library-box" hidden><select id="bg-pick" aria-label="Background image or video"></select></div>
+          <div class="sub" id="bg-file-box" hidden><input id="bg-file" type="file" accept="image/*,video/*" aria-label="Background file"></div>
+        </div>
+
+        <div class="field">
+          <label for="handle">Your handle on the end card</label>
+          <input id="handle" type="text" placeholder="@yourpage" autocomplete="off" autocapitalize="off" spellcheck="false">
+        </div>
+      </div>
+
+      <div id="result" class="result box" hidden>
+        <h3>Your reel</h3>
+        <video id="result-video" controls playsinline></video>
+        <div class="row">
+          <button type="button" id="btn-download" class="primary">Download video</button>
+          <span id="download-status" class="hint" aria-live="polite"></span>
+        </div>
+        <label for="caption-text">Caption</label>
+        <textarea id="caption-text" rows="9"></textarea>
+        <div class="row"><button type="button" id="btn-copy">Copy caption</button><span id="copy-status" class="hint" aria-live="polite"></span></div>
+      </div>
+    </section>
+
+    <!-- MEDIA -->
+    <section class="view" id="view-media" aria-labelledby="h-media" hidden>
+      <h2 id="h-media">Media shelf</h2>
+      <p class="hint">Keep contributors' voice notes, music you have rights to, and background photos or videos here, ready for any reel. Up to 20 MB each. Voice notes in other formats, like WhatsApp's, are converted on this phone first, which takes as long as the recording plays.</p>
+      <div class="box" id="upload-box">
+        <div class="field">
+          <label for="up-kind">What are you adding?</label>
+          <select id="up-kind">
+            <option value="voice">A voice recording</option>
+            <option value="music">Music</option>
+            <option value="background">A background photo or video</option>
+          </select>
+        </div>
+        <div class="field"><label for="up-file">File</label><input id="up-file" type="file" accept="audio/*,video/*"></div>
+        <div class="field"><label for="up-name">Name</label><input id="up-name" type="text" placeholder="Masjid dha de, read by Uncle Rashid"></div>
+        <div id="up-voice-fields" class="sub">
+          <div class="field"><label for="up-contributor">Who recorded it</label><input id="up-contributor" type="text"></div>
+          <div class="field"><label for="up-saying">Which saying (optional)</label><select id="up-saying"></select></div>
+          <label class="check"><input id="up-permission" type="checkbox"> They agreed, in writing, to it being posted</label>
+        </div>
+        <div class="row"><button type="button" id="btn-upload" class="primary">Add to shelf</button></div>
+        <progress id="up-progress" max="1" value="0" hidden></progress>
+        <p id="up-status" class="hint" aria-live="polite"></p>
+      </div>
+      <p id="no-assets" class="banner" hidden>Only people who can edit this page can add files. You can still use what's on the shelf.</p>
+      <h3>Voices</h3><div class="shelf" id="shelf-voice"></div>
+      <h3>Music</h3><div class="shelf" id="shelf-music"></div>
+      <h3>Backgrounds</h3><div class="shelf" id="shelf-background"></div>
+    </section>
+  </main>
+</div>
+
+<!-- add / edit a saying -->
+<section id="editor" class="sheet" hidden aria-labelledby="editor-title">
+  <div class="sheet-inner">
+    <h2 id="editor-title">Saying</h2>
+    <p class="hint">One line per row. Row 1 of each box belongs together, and each row becomes one screen of the reel.</p>
+    <div class="field"><label for="ed-poet">Poet or source</label><input id="ed-poet" type="text" placeholder="Bulleh Shah · Punjabi proverb · Grandmother in Sialkot"></div>
+    <div class="field"><label for="ed-sm">Shahmukhi</label><textarea id="ed-sm" rows="3" dir="rtl" lang="pnb" class="sm"></textarea></div>
+    <div class="field"><label for="ed-ro">Romanised</label><textarea id="ed-ro" rows="3"></textarea></div>
+    <div class="field"><label for="ed-en">English meaning</label><textarea id="ed-en" rows="3"></textarea></div>
+    <div class="field"><label for="ed-sources">Sources, one per row: title, then a link if there is one</label><textarea id="ed-sources" rows="3" placeholder="Kulliyat-e-Bulleh Shah, ed. …, p. 112&#10;Site name https://…"></textarea></div>
+    <div class="field"><label for="ed-note">Note</label><input id="ed-note" type="text"></div>
+    <p id="ed-msg" class="warn" aria-live="polite"></p>
+    <div class="row">
+      <button type="button" id="ed-save" class="primary">Save</button>
+      <button type="button" id="ed-cancel">Cancel</button>
+    </div>
+  </div>
+</section>
+
+<!-- tap timing -->
+<section id="timing" class="sheet" hidden aria-labelledby="timing-title">
+  <div class="sheet-inner">
+    <h2 id="timing-title">Time the lines</h2>
+    <p id="timing-msg" class="hint"></p>
+    <ol id="timing-list" class="timing-list"></ol>
+    <button type="button" id="tap" class="primary big" disabled>Tap when line 1 starts</button>
+    <div class="row">
+      <button type="button" id="timing-play">Play</button>
+      <button type="button" id="timing-done">Done</button>
+    </div>
+  </div>
+</section>
+
+<script>
+"use strict";
+/* Punjabi Reel Studio
+   Library: sayings in the shared db ("sayings"), each with parts, sources and a review status.
+   Media: assets (voices, music, backgrounds) indexed by db docs in "media".
+   Studio: renders a saying as a 1080x1920 reel over a chosen background, mixes the voice with
+   generated or stored music, records it with MediaRecorder, and hands it to the downloads capability. */
+
+const RW = 1080, RH = 1920, FPS = 30, END_CARD = 3.4;
+const $ = (id) => document.getElementById(id);
+const ease = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
+const words = (s) => (s || "").trim().split(/\s+/).filter(Boolean);
+const nowIso = () => new Date().toISOString();
+const F = { sm: '"Noto Nastaliq Urdu", serif', roman: '"Cormorant Garamond", Georgia, serif', body: '"Mukta", system-ui, sans-serif' };
+const C = { cream: "#FFF3DE", gold: "#FFC94A", muted: "rgba(255,243,222,0.62)", ink: "#140A0A" };
+const local = {
+  get(k, d) { try { return localStorage.getItem(k) ?? d; } catch (_) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (_) { /* per-viewer convenience only */ } },
+};
+
+const app = {
+  db: null, assets: null, downloads: null,
+  sayings: [], media: [],
+  filter: "candidate", openCard: null,
+};
+const state = {
+  sayingId: null, voice: "library", voiceId: "", music: "tanpura", musicId: "", bg: "phulkari", bgId: "",
+  key: 138.59, level: 30, handle: "",
+};
+
+// ---------- tabs ----------
+function showView() {
+  const v = ["library", "studio", "media"].includes(location.hash.slice(1)) ? location.hash.slice(1) : "library";
+  document.querySelectorAll("nav.tabs a").forEach((a) => a.setAttribute("aria-current", a.dataset.view === v ? "page" : "false"));
+  ["library", "studio", "media"].forEach((n) => { $("view-" + n).hidden = n !== v; });
+  if (v !== "studio") stopPreview();
+}
+window.addEventListener("hashchange", showView);
+
+// ---------- data ----------
+function normSaying(doc) {
+  const d = doc.data() || {};
+  return {
+    id: doc.id, poet: d.poet || "", note: d.note || "", status: d.status || "candidate",
+    confidence: d.confidence || "", researchNote: d.researchNote || "", origin: d.origin || "",
+    parts: (Array.isArray(d.parts) ? d.parts : []).filter((p) => p && p.shahmukhi).map((p) => ({ shahmukhi: String(p.shahmukhi), roman: String(p.roman || ""), english: String(p.english || "") })),
+    sources: (Array.isArray(d.sources) ? d.sources : []).filter((s) => s && (s.title || s.url)).map((s) => ({ title: String(s.title || ""), url: String(s.url || ""), note: String(s.note || "") })),
+    updated: d.updated || d.created || "",
+  };
+}
+function normMedia(doc) {
+  const d = doc.data() || {};
+  return { id: doc.id, kind: d.kind, name: d.name || "Untitled", assetId: d.assetId || "", contentType: d.contentType || "",
+    contributor: d.contributor || "", permission: !!d.permission, sayingId: d.sayingId || "", marks: d.marks || {} };
+}
+const sayingById = (id) => app.sayings.find((s) => s.id === id);
+const mediaById = (id) => app.media.find((m) => m.id === id);
+const blobUrl = (assetId) => "/_blob/" + assetId;
+
+async function connect() {
+  const c = window.claude;
+  if (!c || !c.use) { offline("Open this page in Claude to use the library and media shelf."); renderAll(); return; }
+  c.use("downloads").then((d) => { app.downloads = d; });
+  c.use("assets").then((a) => { app.assets = a; $("upload-box").hidden = !a; $("no-assets").hidden = !!a; });
+  const db = await c.use("db");
+  if (!db) { offline("The library can't be reached in this view. The studio still works with files from your phone."); renderAll(); return; }
+  app.db = db;
+  const slow = setTimeout(() => offline("The library is taking a while to load. It may be out of date."), 10000);
+  db.collection("sayings").onSnapshot((snap) => {
+    if (!snap.metadata.fromCache) { clearTimeout(slow); $("offline").hidden = true; }
+    app.sayings = snap.docs.map(normSaying).filter((s) => s.parts.length);
+    renderLibrary(); fillSayingSelects(); rebuildScene();
+  }, (e) => { clearTimeout(slow); offline("The library stopped updating (" + e.code + "). Reload the page to try again."); });
+  db.collection("media").onSnapshot((snap) => {
+    app.media = snap.docs.map(normMedia).filter((m) => m.assetId && m.kind);
+    renderMedia(); fillMediaSelects();
+  }, (e) => offline("The media shelf stopped updating (" + e.code + ")."));
+}
+function offline(msg) { $("offline").textContent = msg; $("offline").hidden = false; }
+
+// ---------- library ----------
+const STATUS_LABEL = { candidate: "To review", approved: "Approved", rejected: "Rejected" };
+function renderLibrary() {
+  const review = app.sayings.filter((s) => s.status === "candidate").length;
+  $("count-review").textContent = review ? `(${review})` : "";
+  const list = app.sayings
+    .filter((s) => app.filter === "all" || s.status === app.filter)
+    .sort((a, b) => String(b.updated).localeCompare(String(a.updated)));
+  const box = $("cards");
+  if (!list.length) {
+    const msg = { candidate: "Nothing waiting for review. New research results will appear here.", approved: "No approved sayings yet. Review the ones under To review.", rejected: "Nothing rejected.", all: "The library is empty. Add a saying, or ask Claude for a research batch." }[app.filter];
+    box.replaceChildren(Object.assign(document.createElement("p"), { className: "empty", textContent: msg }));
+    return;
+  }
+  box.replaceChildren(...list.map(cardFor));
+}
+function el(tag, props, ...kids) { const e = Object.assign(document.createElement(tag), props || {}); kids.flat().forEach((k) => k != null && e.append(k)); return e; }
+function cardFor(s) {
+  const open = app.openCard === s.id;
+  const card = el("article", { className: "card " + s.status });
+  card.append(
+    el("p", { className: "sm-line", lang: "pnb", dir: "rtl", textContent: s.parts[0].shahmukhi + (s.parts.length > 1 ? " …" : "") }),
+    s.parts[0].roman ? el("p", { className: "roman", textContent: s.parts[0].roman }) : null,
+    el("div", { className: "meta" },
+      el("span", { className: "pill " + s.status, textContent: STATUS_LABEL[s.status] || s.status }),
+      s.poet ? el("span", { textContent: s.poet }) : null,
+      el("span", { textContent: s.sources.length ? `${s.sources.length} source${s.sources.length > 1 ? "s" : ""}` : "no source yet" }),
+      s.confidence ? el("span", { textContent: `confidence: ${s.confidence}` }) : null,
+      s.parts.length > 1 ? el("span", { textContent: `${s.parts.length} lines` }) : null),
+  );
+  const toggle = el("button", { type: "button", className: "small", textContent: open ? "Hide details" : "Details" });
+  toggle.setAttribute("aria-expanded", String(open));
+  toggle.onclick = () => { app.openCard = open ? null : s.id; renderLibrary(); };
+  const make = el("button", { type: "button", className: "small", textContent: "Make reel" });
+  make.onclick = () => { state.sayingId = s.id; $("saying").value = s.id; marks = null; rebuildScene(); location.hash = "#studio"; };
+  card.append(el("div", { className: "row" }, toggle, make));
+  if (open) card.append(detailsFor(s));
+  return card;
+}
+function detailsFor(s) {
+  const d = el("div", { className: "details" });
+  s.parts.forEach((p) => d.append(el("div", { className: "part" },
+    el("p", { className: "sm-line", lang: "pnb", dir: "rtl", textContent: p.shahmukhi }),
+    p.roman ? el("p", { className: "roman", textContent: p.roman }) : null,
+    p.english ? el("p", { className: "en", textContent: p.english }) : null)));
+  if (s.sources.length) {
+    d.append(el("h3", { textContent: "Sources" }));
+    d.append(el("ol", { className: "sources" }, s.sources.map((src) => el("li", null,
+      src.url ? el("a", { href: src.url, target: "_blank", rel: "noopener noreferrer", textContent: src.title || src.url }) : src.title,
+      src.note ? el("span", { className: "hint", textContent: " · " + src.note }) : null))));
+  } else d.append(el("p", { className: "warn", textContent: "No source yet. Add one before approving." }));
+  if (s.researchNote) d.append(el("p", { className: "hint", textContent: "Research note: " + s.researchNote }));
+  if (s.note) d.append(el("p", { className: "hint", textContent: "Note: " + s.note }));
+  const canWrite = !!app.db;
+  const actions = el("div", { className: "row" });
+  if (canWrite) {
+    if (s.status !== "approved") {
+      const ok = el("button", { type: "button", className: "small primary", textContent: "Approve" });
+      ok.disabled = !s.sources.length;
+      ok.title = s.sources.length ? "Checked against its source by a fluent reader" : "Add a source first";
+      ok.onclick = () => setStatus(s, "approved");
+      actions.append(ok);
+    }
+    if (s.status !== "rejected") { const no = el("button", { type: "button", className: "small", textContent: "Reject" }); no.onclick = () => setStatus(s, "rejected"); actions.append(no); }
+    if (s.status !== "candidate") { const back = el("button", { type: "button", className: "small", textContent: "Back to review" }); back.onclick = () => setStatus(s, "candidate"); actions.append(back); }
+    const edit = el("button", { type: "button", className: "small", textContent: "Edit" }); edit.onclick = () => openEditor(s); actions.append(edit);
+    const del = el("button", { type: "button", className: "small danger", textContent: "Delete" });
+    del.onclick = () => {
+      const conf = el("div", { className: "confirm" }, "Delete this saying for everyone?");
+      const yes = el("button", { type: "button", className: "small danger", textContent: "Delete" });
+      const no = el("button", { type: "button", className: "small", textContent: "Keep" });
+      yes.onclick = async () => { try { await app.db.doc("sayings/" + s.id).delete(); } catch (e) { conf.textContent = "Couldn't delete (" + e.code + ")."; } };
+      no.onclick = () => conf.remove();
+      conf.append(yes, no); d.append(conf);
+    };
+    actions.append(del);
+  }
+  d.append(actions);
+  return d;
+}
+async function setStatus(s, status) {
+  try { await app.db.doc("sayings/" + s.id).update({ status, updated: nowIso() }); }
+  catch (e) { offline("Couldn't save that change (" + e.code + ")."); }
+}
+document.querySelectorAll(".filters button").forEach((b) => b.addEventListener("click", () => {
+  app.filter = b.dataset.filter;
+  document.querySelectorAll(".filters button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+  renderLibrary();
+}));
+
+// editor
+let editing = null;
+function openEditor(s) {
+  editing = s || null;
+  $("ed-poet").value = s ? s.poet : "";
+  $("ed-sm").value = s ? s.parts.map((p) => p.shahmukhi).join("\n") : "";
+  $("ed-ro").value = s ? s.parts.map((p) => p.roman).join("\n") : "";
+  $("ed-en").value = s ? s.parts.map((p) => p.english).join("\n") : "";
+  $("ed-sources").value = s ? s.sources.map((x) => [x.title, x.url].filter(Boolean).join(" ")).join("\n") : "";
+  $("ed-note").value = s ? s.note : "";
+  $("ed-msg").textContent = "";
+  $("editor").hidden = false;
+  $("ed-poet").focus();
+}
+$("btn-add").addEventListener("click", () => openEditor(null));
+$("ed-cancel").addEventListener("click", () => { $("editor").hidden = true; });
+$("ed-save").addEventListener("click", async () => {
+  if (!app.db) { $("ed-msg").textContent = "The library can't be reached here, so this can't be saved."; return; }
+  const rows = (id) => $(id).value.split("\n").map((l) => l.trim()).filter(Boolean);
+  const sm = rows("ed-sm"), ro = rows("ed-ro"), en = rows("ed-en");
+  if (!sm.length) { $("ed-msg").textContent = "Add the saying in Shahmukhi."; return; }
+  if (ro.length && ro.length !== sm.length) { $("ed-msg").textContent = `The romanised box has ${ro.length} rows but the Shahmukhi has ${sm.length}. Match them row by row.`; return; }
+  if (en.length && en.length !== sm.length) { $("ed-msg").textContent = `The English box has ${en.length} rows but the Shahmukhi has ${sm.length}. Match them row by row.`; return; }
+  const sources = rows("ed-sources").map((line) => { const m = line.match(/https?:\/\/\S+/); return { title: m ? line.replace(m[0], "").trim() : line, url: m ? m[0] : "", note: "" }; });
+  const body = { poet: $("ed-poet").value.trim(), note: $("ed-note").value.trim(), sources,
+    parts: sm.map((_, i) => ({ shahmukhi: sm[i], roman: ro[i] || "", english: en[i] || "" })), updated: nowIso() };
+  $("ed-save").disabled = true;
+  try {
+    if (editing) await app.db.doc("sayings/" + editing.id).update(body);
+    else await app.db.collection("sayings").add({ ...body, status: "candidate", origin: "manual", created: nowIso() });
+    $("editor").hidden = true;
+  } catch (e) { $("ed-msg").textContent = "Couldn't save (" + e.code + ")."; }
+  $("ed-save").disabled = false;
+});
+
+// ---------- media shelf ----------
+function renderMedia() {
+  for (const kind of ["voice", "music", "background"]) {
+    const items = app.media.filter((m) => m.kind === kind);
+    const box = $("shelf-" + kind);
+    if (!items.length) { box.replaceChildren(el("p", { className: "empty", textContent: { voice: "No voices yet.", music: "No music yet. The generated drones are always available in the studio.", background: "No photos or videos yet. The generated backgrounds are always available." }[kind] })); continue; }
+    box.replaceChildren(...items.map((m) => {
+      const isImg = /^image\//.test(m.contentType), isVid = /^video\//.test(m.contentType) && kind === "background";
+      const thumb = isImg ? el("img", { className: "thumb", src: blobUrl(m.assetId), alt: "" }) : isVid ? el("video", { className: "thumb", src: blobUrl(m.assetId), muted: true, preload: "metadata" }) : el("div", { className: "thumb", textContent: kind === "voice" ? "voice" : "music" });
+      const s = m.sayingId ? sayingById(m.sayingId) : null;
+      const info = el("div", { className: "info" },
+        el("span", { className: "name", textContent: m.name }),
+        kind === "voice" ? el("span", { className: "hint", textContent: [m.contributor || "contributor not named", m.permission ? "permission given" : "no permission recorded", s ? "for: " + (s.parts[0].roman || s.poet) : ""].filter(Boolean).join(" · ") }) : null);
+      const item = el("div", { className: "item" }, thumb, info);
+      if (kind !== "background") {
+        const play = el("button", { type: "button", className: "small", textContent: "Play" });
+        let a = null;
+        play.onclick = () => { if (a && !a.paused) { a.pause(); play.textContent = "Play"; return; } a = a || new Audio(blobUrl(m.assetId)); a.onended = () => { play.textContent = "Play"; }; a.play().catch(() => {}); play.textContent = "Stop"; };
+        item.append(play);
+      }
+      if (app.assets) {
+        const del = el("button", { type: "button", className: "small danger", textContent: "Remove" });
+        del.onclick = () => {
+          if (del.dataset.confirm !== "1") { del.dataset.confirm = "1"; del.textContent = "Tap to confirm"; return; }
+          removeMedia(m, del);
+        };
+        item.append(del);
+      }
+      return item;
+    }));
+  }
+}
+async function removeMedia(m, btn) {
+  btn.disabled = true;
+  try { await app.db.doc("media/" + m.id).delete(); await app.assets.delete(m.assetId).catch(() => {}); }
+  catch (e) { btn.disabled = false; btn.textContent = "Couldn't remove"; }
+}
+function updateUploadForm() {
+  const k = $("up-kind").value;
+  $("up-voice-fields").hidden = k !== "voice";
+  $("up-file").accept = k === "background" ? "image/*,video/*" : "audio/*,video/*";
+}
+$("up-kind").addEventListener("change", updateUploadForm);
+$("up-file").addEventListener("change", () => { const f = $("up-file").files[0]; if (f && !$("up-name").value) $("up-name").value = f.name.replace(/\.[^.]+$/, ""); });
+
+/* Stored files must be images or MP4/WebM video. Audio in an MP4 container (.m4a) or WebM is kept
+   as it is; anything else (WhatsApp .opus, .mp3, .wav) is re-recorded into WebM audio here, in real time. */
+const MAX = 20 * 1024 * 1024;
+function storableType(f) {
+  const t = f.type || "", n = f.name.toLowerCase();
+  if (/^image\/(png|jpeg|gif|webp)$/.test(t)) return t;
+  if (t === "video/mp4" || t === "audio/mp4" || t === "audio/x-m4a" || t === "audio/m4a" || /\.(m4a|mp4)$/.test(n)) return "video/mp4";
+  if (t === "video/webm" || t === "audio/webm" || /\.webm$/.test(n)) return "video/webm";
+  return null;
+}
+function convertAudio(file, onProgress) {
+  return new Promise((resolve, reject) => {
+    const media = document.createElement(/^video\//.test(file.type) ? "video" : "audio");
+    media.src = URL.createObjectURL(file); media.preload = "auto"; media.playsInline = true;
+    const ac = new (window.AudioContext || window.webkitAudioContext)();
+    const dest = ac.createMediaStreamDestination();
+    media.onerror = () => { ac.close(); reject(new Error("This file can't be played on this phone.")); };
+    media.onloadedmetadata = async () => {
+      try {
+        ac.createMediaElementSource(media).connect(dest); // not connected to the speakers: conversion is silent
+        await ac.resume();
+        const mime = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"].find((m) => MediaRecorder.isTypeSupported(m));
+        if (!mime) throw new Error("This phone can't convert audio.");
+        const rec = new MediaRecorder(dest.stream, { mimeType: mime, audioBitsPerSecond: 128000 });
+        const chunks = [];
+        rec.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+        rec.onstop = () => { ac.close(); resolve({ blob: new Blob(chunks, { type: mime.split(";")[0] }), type: mime.includes("mp4") ? "video/mp4" : "video/webm" }); };
+        const tick = setInterval(() => onProgress(media.duration ? media.currentTime / media.duration : 0), 250);
+        media.onended = () => { clearInterval(tick); onProgress(1); rec.stop(); };
+        rec.start(500);
+        await media.play();
+      } catch (e) { ac.close(); reject(e); }
+    };
+  });
+}
+$("btn-upload").addEventListener("click", async () => {
+  const f = $("up-file").files[0], kind = $("up-kind").value, status = $("up-status"), bar = $("up-progress");
+  if (!app.assets || !app.db) { status.textContent = "Adding files isn't available in this view."; return; }
+  if (!f) { status.textContent = "Choose a file first."; return; }
+  const btn = $("btn-upload"); btn.disabled = true;
+  try {
+    let blob = f, type = storableType(f);
+    if (kind === "background" && !(type && (/^image\//.test(type) || type === "video/mp4" || type === "video/webm"))) throw new Error("Use a JPG, PNG, WebP or MP4 for backgrounds.");
+    if (kind !== "background" && (!type || /^image\//.test(type) || f.size > MAX)) {
+      status.textContent = "Converting… keep this page open. It takes as long as the recording."; bar.hidden = false; bar.value = 0;
+      ({ blob, type } = await convertAudio(f, (p) => { bar.value = p; }));
+    }
+    if (blob.size > MAX) throw new Error("The file is over 20 MB. Trim it or use a shorter clip.");
+    status.textContent = "Uploading…";
+    const up = await app.assets.upload(blob, { type });
+    await app.db.collection("media").add({
+      kind, name: $("up-name").value.trim() || f.name, assetId: up.id, contentType: up.contentType, sizeBytes: up.sizeBytes,
+      contributor: kind === "voice" ? $("up-contributor").value.trim() : "", permission: kind === "voice" ? $("up-permission").checked : false,
+      sayingId: kind === "voice" ? $("up-saying").value : "", marks: {}, created: nowIso(),
+    });
+    status.textContent = "Added to the shelf.";
+    $("up-file").value = ""; $("up-name").value = ""; $("up-contributor").value = ""; $("up-permission").checked = false;
+  } catch (e) {
+    const code = e && e.code;
+    status.textContent = code === "too_large" ? "The file is over 20 MB." : code === "unsupported_type" ? "That file type can't be stored." : code === "quota_or_state" ? "The shelf is full. Remove something first." : "Couldn't add it: " + (e && e.message ? e.message : code || e);
+  }
+  bar.hidden = true; btn.disabled = false;
+});
+
+// ---------- selects ----------
+function fillSayingSelects() {
+  const approved = app.sayings.filter((s) => s.status === "approved"), other = app.sayings.filter((s) => s.status === "candidate");
+  const opt = (s) => el("option", { value: s.id, textContent: (s.parts[0].roman || s.parts[0].shahmukhi).slice(0, 60) + (s.parts.length > 1 ? ` (${s.parts.length} lines)` : "") });
+  const groups = [["Approved", approved], ["Not approved yet", other]].filter(([, l]) => l.length)
+    .map(([label, l]) => el("optgroup", { label }, l.map(opt)));
+  $("saying").replaceChildren(...groups);
+  if (!sayingById(state.sayingId) || sayingById(state.sayingId).status === "rejected") state.sayingId = (approved[0] || other[0] || {}).id || null;
+  if (state.sayingId) $("saying").value = state.sayingId;
+  $("up-saying").replaceChildren(el("option", { value: "", textContent: "Not linked" }), ...app.sayings.filter((s) => s.status !== "rejected").map(opt));
+}
+function fillMediaSelects() {
+  const fill = (sel, kind, key, empty) => {
+    let items = app.media.filter((m) => m.kind === kind);
+    if (kind === "voice" && state.sayingId) items = items.sort((a, b) => (b.sayingId === state.sayingId) - (a.sayingId === state.sayingId));
+    sel.replaceChildren(...(items.length ? items.map((m) => el("option", { value: m.id, textContent: m.name + (kind === "voice" && m.sayingId === state.sayingId ? " ★" : "") })) : [el("option", { value: "", textContent: empty })]));
+    if (!items.some((m) => m.id === state[key])) state[key] = items[0] ? items[0].id : "";
+    sel.value = state[key];
+  };
+  fill($("voice-pick"), "voice", "voiceId", "No voices on the shelf yet");
+  fill($("music-pick"), "music", "musicId", "No music on the shelf yet");
+  fill($("bg-pick"), "background", "bgId", "No backgrounds on the shelf yet");
+  loadVoice(); loadMusic(); loadBackground();
+}
+
+// ---------- media elements used by the studio ----------
+let voiceEl = null, musicEl = null, bgMedia = null, marks = null, voiceFileUrl = null, musicFileUrl = null, bgFileUrl = null;
+function voiceSrc() {
+  if (state.voice === "library") { const m = mediaById(state.voiceId); return m ? blobUrl(m.assetId) : null; }
+  if (state.voice === "file") return voiceFileUrl;
+  return null;
+}
+function loadVoice() {
+  const src = voiceSrc();
+  if (!voiceEl) {
+    voiceEl = new Audio(); voiceEl.preload = "auto";
+    // WebM recorded in a browser (our converted voice notes) carries no length: seek far once so the
+    // browser measures it, then go back to the start.
+    voiceEl.addEventListener("loadedmetadata", () => { if (voiceEl.duration === Infinity) voiceEl.currentTime = 1e9; updateTimingUI(); });
+    voiceEl.addEventListener("durationchange", () => { if (isFinite(voiceEl.duration) && voiceEl.currentTime > 0 && voiceEl.paused) voiceEl.currentTime = 0; updateTimingUI(); });
+    voiceEl.addEventListener("error", updateTimingUI);
+  }
+  const want = src ? new URL(src, location.href).href : "";
+  if (voiceEl.src !== want) {
+    if (src) voiceEl.src = src; else voiceEl.removeAttribute("src");
+    const m = state.voice === "library" ? mediaById(state.voiceId) : null;
+    marks = m && state.sayingId && Array.isArray(m.marks[state.sayingId]) ? m.marks[state.sayingId] : null;
+  }
+  updateTimingUI();
+}
+function loadMusic() {
+  const src = state.music === "library" ? (mediaById(state.musicId) ? blobUrl(mediaById(state.musicId).assetId) : null) : state.music === "file" ? musicFileUrl : null;
+  if (!musicEl) { musicEl = new Audio(); musicEl.preload = "auto"; musicEl.loop = true; }
+  const want = src ? new URL(src, location.href).href : "";
+  if (musicEl.src !== want) { if (src) musicEl.src = src; else musicEl.removeAttribute("src"); }
+}
+function loadBackground() {
+  let src = null, isVideo = false;
+  if (state.bg === "library") { const m = mediaById(state.bgId); if (m) { src = blobUrl(m.assetId); isVideo = /^video\//.test(m.contentType); } }
+  if (state.bg === "file" && bgFileUrl) { src = bgFileUrl.url; isVideo = bgFileUrl.video; }
+  if (!src) { bgMedia = null; return; }
+  if (bgMedia && bgMedia.dataset.src === src) return;
+  if (isVideo) { const v = document.createElement("video"); v.muted = true; v.loop = true; v.playsInline = true; v.src = src; v.play().catch(() => {}); bgMedia = v; }
+  else { const i = new Image(); i.src = src; bgMedia = i; }
+  bgMedia.dataset.src = src;
+}
+const voiceReady = () => voiceEl && voiceEl.src && isFinite(voiceEl.duration);
+const usesVoice = () => state.voice !== "none";
+
+// ---------- sound: one mixer for voice and music ----------
+/* voice ─► voiceIn ───────────────────────────┐
+   music ─► musicBus ─► musicOut (fade, volume) ┼─► dest (recorded) and speakers */
+const Mixer = {
+  ac: null, dest: null, voiceIn: null, musicBus: null, musicOut: null, routed: new Set(), droneTimer: null, droneBus: null, waves: null, ir: null,
+  ensure() {
+    if (this.ac) return;
+    const ac = (this.ac = new (window.AudioContext || window.webkitAudioContext)());
+    this.dest = ac.createMediaStreamDestination();
+    this.voiceIn = ac.createGain(); this.voiceIn.connect(this.dest); this.voiceIn.connect(ac.destination);
+    this.musicBus = ac.createGain();
+    this.musicOut = ac.createGain(); this.musicOut.gain.value = 0;
+    this.musicBus.connect(this.musicOut); this.musicOut.connect(this.dest); this.musicOut.connect(ac.destination);
+  },
+  wake() { this.ensure(); return this.ac.resume(); },
+  route(elm, to) { // a media element can be routed through Web Audio only once
+    this.ensure();
+    if (this.routed.has(elm)) return;
+    this.ac.createMediaElementSource(elm).connect(to);
+    this.routed.add(elm);
+  },
+  level() { return (state.level / 100) * (state.music === "tanpura" ? 0.7 : state.music === "harmonium" ? 0.55 : 1); },
+  async start(total) {
+    await this.wake();
+    if (voiceEl) this.route(voiceEl, this.voiceIn);
+    if (musicEl) this.route(musicEl, this.musicBus);
+    const t = this.ac.currentTime, g = this.musicOut.gain;
+    g.cancelScheduledValues(t); g.setValueAtTime(0, t);
+    if (state.music === "none") return;
+    g.linearRampToValueAtTime(this.level(), t + 1.5);
+    if (state.music === "tanpura") this.tanpura();
+    if (state.music === "harmonium") this.harmonium();
+    if ((state.music === "library" || state.music === "file") && musicEl.src) { musicEl.currentTime = 0; musicEl.play().catch(() => {}); }
+    if (isFinite(total)) { g.setValueAtTime(this.level(), Math.max(t + 1.6, t + total - 2.6)); g.linearRampToValueAtTime(0, t + total); }
+  },
+  setLevel() { if (this.ac && this.musicOut.gain.value > 0) this.musicOut.gain.setTargetAtTime(this.level(), this.ac.currentTime, 0.1); },
+  stop() {
+    if (!this.ac) return;
+    clearInterval(this.droneTimer); this.droneTimer = null;
+    if (this.droneBus) { this.droneBus.disconnect(); this.droneBus = null; }
+    (this.held || []).forEach((o) => { try { o.stop(); } catch (_) { /* already stopped */ } });
+    this.held = [];
+    if (musicEl) musicEl.pause();
+    const g = this.musicOut.gain; g.cancelScheduledValues(this.ac.currentTime); g.setValueAtTime(0, this.ac.currentTime);
+  },
+  room(bus) { // short generated reverb
+    const ac = this.ac;
+    if (!this.ir) {
+      const len = Math.floor(ac.sampleRate * 2.8), ir = ac.createBuffer(2, len, ac.sampleRate);
+      for (let ch = 0; ch < 2; ch++) { const d = ir.getChannelData(ch); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3); }
+      this.ir = ir;
+    }
+    const verb = ac.createConvolver(); verb.buffer = this.ir;
+    const wet = ac.createGain(); wet.gain.value = 0.32;
+    bus.connect(this.musicBus); bus.connect(verb); verb.connect(wet); wet.connect(this.musicBus);
+  },
+  /* Tanpura: four strings plucked in a slow cycle (Pa, Sa, Sa, low Sa). Each pluck is a rich harmonic
+     tone that decays, plus upper harmonics that swell after the pluck: the "jawari" shimmer of the bridge. */
+  tanpura() {
+    const ac = this.ac;
+    if (!this.waves) {
+      const n = 18, re = new Float32Array(n), base = new Float32Array(n), bright = new Float32Array(n);
+      for (let h = 1; h < n; h++) { base[h] = 1 / Math.pow(h, 1.25); bright[h] = h >= 4 && h <= 15 ? 0.7 / Math.sqrt(h) : 0; }
+      this.waves = { base: ac.createPeriodicWave(re, base), bright: ac.createPeriodicWave(re, bright) };
+    }
+    const bus = (this.droneBus = ac.createGain());
+    const tone = ac.createBiquadFilter(); tone.type = "lowpass"; tone.frequency.value = 3800; tone.connect(bus);
+    this.room(bus);
+    const sa = state.key, strings = [sa * 0.75, sa, sa, sa * 0.5], offsets = [0, 1.15, 1.65, 2.2], cycle = 4.4;
+    const pluck = (t0, f) => {
+      const det = (Math.random() - 0.5) * 4;
+      const o1 = ac.createOscillator(), g1 = ac.createGain();
+      o1.setPeriodicWave(this.waves.base); o1.frequency.value = f; o1.detune.value = det;
+      g1.gain.setValueAtTime(0.0001, t0); g1.gain.linearRampToValueAtTime(0.32, t0 + 0.012); g1.gain.exponentialRampToValueAtTime(0.0008, t0 + 4.2);
+      const o2 = ac.createOscillator(), g2 = ac.createGain();
+      o2.setPeriodicWave(this.waves.bright); o2.frequency.value = f; o2.detune.value = det + 1.5;
+      g2.gain.setValueAtTime(0.0001, t0); g2.gain.linearRampToValueAtTime(0.11, t0 + 0.45); g2.gain.exponentialRampToValueAtTime(0.0006, t0 + 3.6);
+      o1.connect(g1); g1.connect(tone); o2.connect(g2); g2.connect(tone);
+      o1.start(t0); o2.start(t0); o1.stop(t0 + 4.3); o2.stop(t0 + 4.3);
+    };
+    let next = ac.currentTime + 0.1, cycleStart = next, k = 0;
+    const schedule = () => {
+      while (next < ac.currentTime + 6) {
+        pluck(next, strings[k]); k++;
+        if (k === strings.length) { k = 0; cycleStart += cycle; }
+        next = cycleStart + offsets[k];
+      }
+    };
+    schedule(); this.droneTimer = setInterval(schedule, 1000);
+  },
+  /* Harmonium: a held Sa–Pa–Sa chord. Each note is two slightly detuned reeds (the beating gives the
+     reed sound), filtered soft, with a slow swell like the bellows being pumped. */
+  harmonium() {
+    const ac = this.ac, t0 = ac.currentTime;
+    const bus = (this.droneBus = ac.createGain());
+    const tone = ac.createBiquadFilter(); tone.type = "lowpass"; tone.frequency.value = 1500; tone.Q.value = 0.6; tone.connect(bus);
+    this.room(bus);
+    const bellows = ac.createGain(); bellows.gain.value = 0.85; bellows.connect(tone);
+    const lfo = ac.createOscillator(), depth = ac.createGain(); lfo.frequency.value = 0.18; depth.gain.value = 0.15; lfo.connect(depth); depth.connect(bellows.gain); lfo.start(t0);
+    this.held = [lfo];
+    const sa = state.key;
+    [[sa, 0.09], [sa * 1.5, 0.06], [sa * 2, 0.045]].forEach(([f, gain]) => {
+      [-5, 5].forEach((cents) => {
+        const o = ac.createOscillator(), g = ac.createGain();
+        o.type = "sawtooth"; o.frequency.value = f; o.detune.value = cents;
+        g.gain.value = gain; o.connect(g); g.connect(bellows); o.start(t0); this.held.push(o);
+      });
+    });
+  },
+};
+
+// ---------- layout ----------
+function layout(c, text, font, weight, box, opts) {
+  const ws = words(text);
+  let size = opts.size;
+  for (;;) {
+    c.font = `${weight} ${size}px ${font}`;
+    const space = c.measureText(" ").width * (opts.spaceMul || 1);
+    const widths = ws.map((w) => c.measureText(w).width);
+    const rows = [[]]; let rowW = 0;
+    widths.forEach((w, i) => {
+      const add = rows[rows.length - 1].length ? space + w : w;
+      if (rowW + add > box.w && rows[rows.length - 1].length) { rows.push([i]); rowW = w; }
+      else { rows[rows.length - 1].push(i); rowW += add; }
+    });
+    const lh = size * opts.lineH;
+    const orphan = rows.length > 1 && rows[rows.length - 1].length === 1 && size > opts.size * 0.8;
+    if ((rows.length * lh <= box.h && !orphan) || size <= opts.min) {
+      const out = new Array(ws.length);
+      const top = box.y + (box.h - rows.length * lh) / 2 + lh / 2;
+      rows.forEach((row, r) => {
+        const total = row.reduce((s, i) => s + widths[i], 0) + space * (row.length - 1);
+        const y = top + r * lh;
+        if (opts.rtl) { let x = box.x + box.w / 2 + total / 2; for (const i of row) { x -= widths[i]; out[i] = { t: ws[i], x, y }; x -= space; } }
+        else { let x = box.x + box.w / 2 - total / 2; for (const i of row) { out[i] = { t: ws[i], x, y }; x += widths[i] + space; } }
+      });
+      return { words: out, size, font: `${weight} ${size}px ${font}`, rtl: !!opts.rtl };
+    }
+    size *= 0.94;
+  }
+}
+function layoutPart(c, p) {
+  const X = 170, Wd = RW - 340; // inside the phulkari panel, clear of Instagram's right-hand buttons
+  return {
+    sm: layout(c, p.shahmukhi, F.sm, 700, { x: X, y: 380, w: Wd, h: 620 }, { size: 124, min: 40, lineH: 1.9, rtl: true, spaceMul: 2.2 }),
+    ro: p.roman ? layout(c, p.roman, F.roman, "italic 600", { x: X, y: 1050, w: Wd, h: 230 }, { size: 70, min: 34, lineH: 1.25 }) : null,
+    en: p.english,
+  };
+}
+
+// ---------- timing ----------
+function partSeconds(p) { return Math.min(12, Math.max(4, words(p.roman || p.shahmukhi).length * 0.55 + 2.4)); }
+function timeline() {
+  const s = sayingById(state.sayingId);
+  if (!s) return { marks: [], end: 0, total: END_CARD };
+  if (usesVoice() && voiceReady()) {
+    const d = voiceEl.duration, n = s.parts.length;
+    const m = marks && marks.length === n ? marks : s.parts.map((_, i) => (i === 0 ? 0.3 : (d * i) / n));
+    return { marks: m, end: d, total: d + END_CARD };
+  }
+  const m = []; let t = 0.8;
+  for (const p of s.parts) { m.push(t); t += partSeconds(p); }
+  return { marks: m, end: t, total: t + END_CARD };
+}
+
+// ---------- backgrounds ----------
+function rng(seed) { return () => (seed = (seed * 16807) % 2147483647) / 2147483647; }
+function roundRect(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+
+const Phulkari = (() => {
+  let cloth = null, motifs = null, done = null;
+  const GOLD = ["#F2B636", "#E9A425", "#F6C95A"], ORANGE = "#E2701D", MAGENTA = "#C2185B", WHITE = "#F7EBD3";
+  function init() {
+    const r = rng(11);
+    cloth = document.createElement("canvas"); cloth.width = RW; cloth.height = RH;
+    const k = cloth.getContext("2d");
+    k.fillStyle = "#6B1515"; k.fillRect(0, 0, RW, RH); // khaddar dyed madder red
+    for (let i = 0; i < 26000; i++) { k.fillStyle = r() < 0.5 ? "rgba(0,0,0,0.07)" : "rgba(255,200,160,0.035)"; const h = r() < 0.5; k.fillRect(r() * RW, r() * RH, h ? 6 + r() * 14 : 1.4, h ? 1.4 : 6 + r() * 14); }
+    motifs = []; const band = 150, s = 66; let o = 0;
+    const place = (cx, cy) => motifs.push({ cx, cy, s, order: o++, inner: r() < 0.5 ? ORANGE : MAGENTA, gold: GOLD[(r() * 3) | 0] });
+    for (let x = s; x < RW - s / 2; x += s * 1.55) place(x, band / 2 + 8);
+    for (let y = band + s; y < RH - band - s / 2; y += s * 1.55) place(RW - band / 2 + 4, y);
+    for (let x = RW - s; x > s / 2; x -= s * 1.55) place(x, RH - band / 2 - 8);
+    for (let y = RH - band - s; y > band + s / 2; y -= s * 1.55) place(band / 2 - 4, y);
+    motifs.total = o;
+  }
+  function stitch(c, m, frac) { // horizontal darning stitches fill each diamond
+    const rows = Math.floor((m.s * 2) / 5), shown = Math.floor(rows * frac);
+    for (let i = 0; i < shown; i++) {
+      const dy = -m.s + i * 5 + 2.5, half = m.s - Math.abs(dy), inner = m.s * 0.42 - Math.abs(dy);
+      c.strokeStyle = m.gold; c.lineWidth = 3.2; c.beginPath(); c.moveTo(m.cx - half, m.cy + dy); c.lineTo(m.cx + half, m.cy + dy); c.stroke();
+      if (inner > 0) { c.strokeStyle = m.inner; c.beginPath(); c.moveTo(m.cx - inner, m.cy + dy); c.lineTo(m.cx + inner, m.cy + dy); c.stroke(); }
+    }
+    if (frac >= 1) { c.fillStyle = WHITE; c.fillRect(m.cx - 3, m.cy - 3, 6, 6); }
+  }
+  return {
+    draw(c, t) {
+      if (!cloth) init();
+      if (done) { c.drawImage(done, 0, 0); return; }
+      c.drawImage(cloth, 0, 0);
+      let complete = true;
+      for (const m of motifs) { const f = Math.min(1, Math.max(0, (t - (m.order / motifs.total) * 1.6) / 0.5)); if (f < 1) complete = false; if (f > 0) stitch(c, m, f); }
+      c.save(); c.globalAlpha = ease(t / 0.8);
+      c.fillStyle = "rgba(28,6,8,0.86)"; roundRect(c, 130, 190, RW - 260, RH - 380, 28); c.fill();
+      c.setLineDash([16, 11]); c.lineWidth = 3; c.strokeStyle = "rgba(242,182,54,0.75)"; roundRect(c, 148, 208, RW - 296, RH - 416, 20); c.stroke();
+      c.restore();
+      if (complete && t > 1) { done = document.createElement("canvas"); done.width = RW; done.height = RH; done.getContext("2d").drawImage(c.canvas, 0, 0); }
+    },
+    reset() { done = null; },
+  };
+})();
+
+const Sarson = (() => {
+  let sky = null, flowers = null, trees = null;
+  function init() {
+    sky = document.createElement("canvas"); sky.width = RW; sky.height = RH;
+    const k = sky.getContext("2d");
+    const g = k.createLinearGradient(0, 0, 0, 1560);
+    g.addColorStop(0, "#0E0B22"); g.addColorStop(0.45, "#2A1636"); g.addColorStop(0.78, "#7A3434"); g.addColorStop(0.93, "#D9772E"); g.addColorStop(1, "#F2B54A");
+    k.fillStyle = g; k.fillRect(0, 0, RW, RH);
+    const sun = k.createRadialGradient(760, 1520, 10, 760, 1520, 300);
+    sun.addColorStop(0, "rgba(255,220,140,0.95)"); sun.addColorStop(0.25, "rgba(255,190,90,0.55)"); sun.addColorStop(1, "rgba(255,160,60,0)");
+    k.fillStyle = sun; k.fillRect(0, 1100, RW, 600);
+    const r = rng(5);
+    for (let i = 0; i < 90; i++) { k.fillStyle = `rgba(255,240,220,${0.15 + r() * 0.5})`; k.fillRect(r() * RW, r() * 700, 2, 2); }
+    trees = []; for (let x = -40; x < RW + 40; x += 30 + r() * 70) trees.push({ x, w: 40 + r() * 90, h: 20 + r() * 60 });
+    flowers = []; for (let i = 0; i < 2600; i++) { const d = Math.pow(r(), 1.7); flowers.push({ x: r() * RW, y: 1560 + d * 360, d, ph: r() * 6.28, c: r() < 0.75 ? "#F4CD2E" : "#E8B321" }); }
+    flowers.sort((a, b) => a.y - b.y);
+  }
+  return {
+    draw(c, t) {
+      if (!sky) init();
+      c.drawImage(sky, 0, 0);
+      c.fillStyle = "#1E1420"; for (const tr of trees) { c.beginPath(); c.ellipse(tr.x, 1556, tr.w / 2, tr.h, 0, Math.PI, 0); c.fill(); }
+      c.fillRect(0, 1552, RW, 10);
+      const fg = c.createLinearGradient(0, 1556, 0, RH); fg.addColorStop(0, "#26361A"); fg.addColorStop(1, "#18240F"); c.fillStyle = fg; c.fillRect(0, 1556, RW, RH - 1556);
+      for (const f of flowers) { const sway = Math.sin(t * 1.3 + f.ph + f.x * 0.004) * (2 + f.d * 7), sz = 2 + f.d * 9; c.fillStyle = f.c; c.fillRect(f.x + sway, f.y, sz, sz * 0.8); if (f.d > 0.45) c.fillRect(f.x + sway + sz * 0.6, f.y - sz * 0.5, sz * 0.8, sz * 0.7); }
+      const v = c.createLinearGradient(0, 200, 0, 1560); v.addColorStop(0, "rgba(8,6,18,0.15)"); v.addColorStop(0.75, "rgba(8,6,18,0.45)"); v.addColorStop(1, "rgba(8,6,18,0)"); c.fillStyle = v; c.fillRect(0, 200, RW, 1360);
+    },
+    reset() {},
+  };
+})();
+
+function softShade(c, rgb, a) { // darkens the text area with soft edges, no visible bands
+  const g = c.createLinearGradient(0, 120, 0, 1720);
+  g.addColorStop(0, `rgba(${rgb},0)`); g.addColorStop(0.15, `rgba(${rgb},${a})`); g.addColorStop(0.85, `rgba(${rgb},${a})`); g.addColorStop(1, `rgba(${rgb},0)`);
+  c.fillStyle = g; c.fillRect(0, 120, RW, 1600);
+}
+/* Diya lights: out-of-focus oil lamps drifting slowly upward on a dark warm ground. */
+const Diya = (() => {
+  let ground = null, lights = null;
+  function init() {
+    ground = document.createElement("canvas"); ground.width = RW; ground.height = RH;
+    const k = ground.getContext("2d");
+    const g = k.createLinearGradient(0, 0, 0, RH); g.addColorStop(0, "#0E0604"); g.addColorStop(0.6, "#1E0B06"); g.addColorStop(1, "#2E1207");
+    k.fillStyle = g; k.fillRect(0, 0, RW, RH);
+    const r = rng(23);
+    lights = Array.from({ length: 46 }, () => ({ x: r() * RW, y: r() * RH, rad: 30 + Math.pow(r(), 2) * 150, a: 0.08 + r() * 0.22, sp: 6 + r() * 16, ph: r() * 6.28, hue: r() < 0.7 ? [255, 170, 70] : [255, 210, 120] }));
+  }
+  return {
+    draw(c, t) {
+      if (!ground) init();
+      c.drawImage(ground, 0, 0);
+      c.save(); c.globalCompositeOperation = "lighter";
+      for (const l of lights) {
+        const y = ((l.y - t * l.sp) % (RH + 400) + RH + 400) % (RH + 400) - 200;
+        const flick = 0.85 + 0.15 * Math.sin(t * 3 + l.ph);
+        const g = c.createRadialGradient(l.x, y, 0, l.x, y, l.rad);
+        g.addColorStop(0, `rgba(${l.hue.join(",")},${l.a * flick})`); g.addColorStop(0.7, `rgba(${l.hue.join(",")},${l.a * 0.35 * flick})`); g.addColorStop(1, "rgba(255,150,60,0)");
+        c.fillStyle = g; c.fillRect(l.x - l.rad, y - l.rad, l.rad * 2, l.rad * 2);
+      }
+      c.restore();
+      softShade(c, "10,4,2", 0.35);
+    },
+    reset() {},
+  };
+})();
+
+/* Five rivers: Punjab means "five waters". Five slow ribbons of light flowing across a night ground. */
+const Rivers = (() => {
+  let ground = null;
+  return {
+    draw(c, t) {
+      if (!ground) {
+        ground = document.createElement("canvas"); ground.width = RW; ground.height = RH;
+        const k = ground.getContext("2d"), g = k.createLinearGradient(0, 0, 0, RH);
+        g.addColorStop(0, "#050C14"); g.addColorStop(1, "#0B1F2A"); k.fillStyle = g; k.fillRect(0, 0, RW, RH);
+      }
+      c.drawImage(ground, 0, 0);
+      const cols = ["#6FB7C9", "#8FC9B8", "#C9D8E0", "#E8C77A", "#7FA6D9"];
+      for (let i = 0; i < 5; i++) {
+        const baseY = 260 + i * 340;
+        for (let layer = 0; layer < 3; layer++) {
+          c.beginPath();
+          for (let x = -20; x <= RW + 20; x += 12) {
+            const y = baseY + Math.sin(x * 0.0042 + t * 0.35 + i * 1.3) * 70 + Math.sin(x * 0.011 - t * 0.6 + i) * 18 + layer * 10;
+            if (x === -20) c.moveTo(x, y); else c.lineTo(x, y);
+          }
+          c.strokeStyle = cols[i]; c.globalAlpha = [0.34, 0.17, 0.08][layer]; c.lineWidth = [3, 10, 26][layer]; c.stroke();
+        }
+      }
+      c.globalAlpha = 1;
+      softShade(c, "3,8,12", 0.3);
+    },
+    reset() {},
+  };
+})();
+
+const Picture = {
+  draw(c) {
+    c.fillStyle = C.ink; c.fillRect(0, 0, RW, RH);
+    const m = bgMedia, mw = m && (m.videoWidth || m.naturalWidth), mh = m && (m.videoHeight || m.naturalHeight);
+    if (mw && mh) { const s = Math.max(RW / mw, RH / mh), w = mw * s, h = mh * s; c.drawImage(m, (RW - w) / 2, (RH - h) / 2, w, h); }
+    c.fillStyle = "rgba(10,6,8,0.58)"; c.fillRect(0, 0, RW, RH);
+  },
+  reset() {},
+};
+const BACKGROUNDS = { phulkari: Phulkari, sarson: Sarson, diya: Diya, rivers: Rivers, library: Picture, file: Picture };
+
+// ---------- scene ----------
+let layouts = [];
+function rebuildScene() {
+  const s = sayingById(state.sayingId);
+  layouts = s ? s.parts.map((p) => layoutPart(ctx, p)) : [];
+  Object.values(BACKGROUNDS).forEach((b) => b.reset());
+  $("saying-warn").hidden = !s || s.status === "approved";
+  fillMediaSelects();
+  updateTimingUI();
+}
+function drawWords(c, block, dt, alpha) {
+  c.font = block.font; c.textBaseline = "middle"; c.textAlign = "left"; c.direction = block.rtl ? "rtl" : "ltr";
+  c.shadowColor = "rgba(0,0,0,0.55)"; c.shadowBlur = 14; c.fillStyle = C.cream;
+  block.words.forEach((w, i) => { const a = ease((dt - i * 0.07) / 0.32) * alpha; if (a <= 0) return; c.globalAlpha = a; c.fillText(w.t, w.x, w.y + (1 - a) * 16); });
+  c.shadowBlur = 0; c.globalAlpha = 1; c.direction = "ltr";
+}
+function lineCount(c, text, maxW) { let n = 1, cur = ""; for (const w of words(text)) { const t = cur ? cur + " " + w : w; if (c.measureText(t).width > maxW && cur) { n++; cur = w; } else cur = t; } return n; }
+function wrapCentered(c, text, y, maxW, lh) { const out = []; let cur = ""; for (const w of words(text)) { const t = cur ? cur + " " + w : w; if (c.measureText(t).width > maxW && cur) { out.push(cur); cur = w; } else cur = t; } if (cur) out.push(cur); out.forEach((l, i) => c.fillText(l, RW / 2, y + i * lh)); }
+function drawPart(c, L, dt, alpha) {
+  drawWords(c, L.sm, dt, alpha);
+  if (L.ro) drawWords(c, L.ro, dt - 0.45, alpha);
+  const ea = alpha * ease((dt - 0.8) / 0.4);
+  if (ea > 0 && L.en) {
+    c.globalAlpha = ea; c.fillStyle = C.cream; c.textAlign = "center"; c.textBaseline = "middle"; c.direction = "ltr";
+    let size = 46; for (; size > 34; size -= 2) { c.font = `400 ${size}px ${F.body}`; if (lineCount(c, L.en, RW - 340) <= 3) break; }
+    c.font = `400 ${size}px ${F.body}`; wrapCentered(c, L.en, 1340, RW - 340, size * 1.3);
+    c.globalAlpha = 1;
+  }
+}
+function render(c, t, tl) {
+  const s = sayingById(state.sayingId);
+  BACKGROUNDS[state.bg].draw(c, t);
+  if (!s) { c.fillStyle = C.muted; c.font = `400 44px ${F.body}`; c.textAlign = "center"; c.fillText("Choose a saying", RW / 2, RH / 2); return; }
+  const outro = ease((t - tl.end) / 0.5);
+  c.globalAlpha = ease((t - 0.2) / 0.6) * (1 - outro);
+  c.font = `italic 600 52px ${F.roman}`; c.fillStyle = C.gold; c.textAlign = "center"; c.textBaseline = "middle"; c.direction = "ltr";
+  if (s.poet) c.fillText(s.poet, RW / 2, 270);
+  c.globalAlpha = 1;
+  if (t < tl.end) {
+    let i = -1; for (let k = 0; k < tl.marks.length; k++) if (t >= tl.marks[k]) i = k;
+    if (i >= 0 && layouts[i]) { const next = i + 1 < tl.marks.length ? tl.marks[i + 1] : tl.end; drawPart(c, layouts[i], t - tl.marks[i], 1 - ease((t - (next - 0.3)) / 0.3)); }
+  }
+  const ec = ease((t - tl.end - 0.2) / 0.7);
+  if (ec > 0) {
+    c.globalAlpha = ec; c.textAlign = "center"; c.textBaseline = "middle";
+    c.font = `700 120px ${F.sm}`; c.fillStyle = C.gold; c.direction = "rtl"; c.fillText("پنجابی", RW / 2, 820);
+    c.direction = "ltr"; c.font = `italic 600 64px ${F.roman}`; c.fillStyle = C.cream; c.fillText("Punjabi wisdom, in Shahmukhi", RW / 2, 1000);
+    if (state.handle) { c.font = `600 46px ${F.body}`; c.fillStyle = C.muted; c.fillText(state.handle, RW / 2, 1120); }
+    c.globalAlpha = 1;
+  }
+}
+
+// ---------- studio controls ----------
+const cv = $("stage"), ctx = cv.getContext("2d", { alpha: false });
+let preview = null, recording = false, lastReel = null;
+
+function updateTimingUI() {
+  const s = sayingById(state.sayingId), tl = timeline();
+  $("voice-library-box").hidden = state.voice !== "library";
+  $("voice-file-box").hidden = state.voice !== "file";
+  $("music-key-box").hidden = !["tanpura", "harmonium"].includes(state.music);
+  $("music-library-box").hidden = state.music !== "library";
+  $("music-file-box").hidden = state.music !== "file";
+  $("music-level-box").hidden = state.music === "none";
+  $("bg-library-box").hidden = state.bg !== "library";
+  $("bg-file-box").hidden = state.bg !== "file";
+  const timed = marks && s && marks.length === s.parts.length;
+  $("timing-status").textContent = !usesVoice() ? "Lines are timed automatically."
+    : !voiceEl || !voiceEl.getAttribute("src") ? "No recording chosen yet."
+    : !voiceReady() ? "Loading the recording…"
+    : !s ? "" : s.parts.length === 1 ? "One line: it shows for the whole recording."
+    : timed ? `Timed: ${s.parts.length} lines.` : "Not timed yet. Lines are spread evenly until you time them.";
+  $("btn-timing").hidden = !usesVoice() || !voiceReady() || !s || s.parts.length < 2;
+  $("length").textContent = s ? `${Math.round(tl.total)} s` : "";
+}
+function wallClock() { let t0 = 0; return { start() { t0 = performance.now(); return Promise.resolve(); }, now() { return (performance.now() - t0) / 1000; }, stop() {} }; }
+function voiceClock() {
+  let endedAt = null;
+  return {
+    start() { voiceEl.currentTime = 0; endedAt = null; voiceEl.onended = () => { endedAt = performance.now(); }; return voiceEl.play(); },
+    now() { return endedAt ? voiceEl.duration + (performance.now() - endedAt) / 1000 : voiceEl.currentTime; },
+    stop() { voiceEl.pause(); voiceEl.onended = null; },
+  };
+}
+function ready() {
+  if (!sayingById(state.sayingId)) { $("status").textContent = "Choose a saying first."; return false; }
+  if (usesVoice() && !voiceReady()) { $("status").textContent = "Choose a voice recording, or pick No voice."; return false; }
+  if ((state.music === "library" || state.music === "file") && !(musicEl && musicEl.getAttribute("src"))) { $("status").textContent = "Choose the music, or pick another music option."; return false; }
+  $("status").textContent = ""; return true;
+}
+function loop() {
+  requestAnimationFrame(loop);
+  if (recording || $("view-studio").hidden) return;
+  if (preview) { const t = preview.clock.now(); if (t > preview.tl.total) stopPreview(); else { render(ctx, t, preview.tl); return; } }
+  const tl = timeline(); render(ctx, (tl.marks[0] || 0) + 2.2, tl);
+}
+function stopPreview() { if (preview) { preview.clock.stop(); Mixer.stop(); } preview = null; $("btn-preview").textContent = "Play preview"; }
+$("btn-preview").addEventListener("click", async () => {
+  if (preview) { stopPreview(); return; }
+  if (!ready()) return;
+  const tl = timeline(), clock = usesVoice() ? voiceClock() : wallClock();
+  Object.values(BACKGROUNDS).forEach((b) => b.reset());
+  if (bgMedia instanceof HTMLVideoElement) { bgMedia.currentTime = 0; bgMedia.play().catch(() => {}); }
+  await Mixer.start(tl.total);
+  await clock.start().catch(() => {});
+  preview = { clock, tl }; $("btn-preview").textContent = "Stop preview";
+});
+
+$("btn-record").addEventListener("click", () => makeReel().catch((e) => {
+  recording = false; document.body.classList.remove("is-recording"); Mixer.stop(); $("cue").textContent = "";
+  $("status").textContent = "Making the reel failed: " + (e && e.message ? e.message : e);
+}));
+async function makeReel() {
+  if (recording || !ready()) return;
+  stopPreview();
+  const s = sayingById(state.sayingId);
+  const type = ["video/mp4;codecs=avc1,mp4a.40.2", "video/mp4", "video/webm;codecs=vp9,opus", "video/webm"].find((m) => window.MediaRecorder && MediaRecorder.isTypeSupported(m));
+  if (!type) { $("status").textContent = "This browser can't record video."; return; }
+  recording = true; document.body.classList.add("is-recording"); $("result").hidden = true;
+  Object.values(BACKGROUNDS).forEach((b) => b.reset());
+  await Mixer.wake();
+  if (voiceEl) Mixer.route(voiceEl, Mixer.voiceIn);
+  if (musicEl) Mixer.route(musicEl, Mixer.musicBus);
+  const stream = cv.captureStream(FPS);
+  Mixer.dest.stream.getAudioTracks().forEach((tr) => stream.addTrack(tr));
+  const tl = timeline();
+  for (const n of ["3", "2", "1"]) { $("cue").textContent = n; await new Promise((r) => setTimeout(r, 650)); }
+  $("cue").textContent = "Making the reel… keep this screen open";
+  const rec = new MediaRecorder(stream, { mimeType: type, videoBitsPerSecond: 8_000_000 });
+  const chunks = []; rec.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+  const clock = usesVoice() ? voiceClock() : wallClock();
+  if (bgMedia instanceof HTMLVideoElement) { bgMedia.currentTime = 0; bgMedia.play().catch(() => {}); }
+  rec.start(250);
+  await Mixer.start(tl.total);
+  await clock.start();
+  await new Promise((done) => { (function tick() { const t = clock.now(); if (t > tl.total) return done(); requestAnimationFrame(tick); render(ctx, t, tl); })(); });
+  clock.stop();
+  await new Promise((r) => { rec.onstop = r; rec.stop(); });
+  Mixer.stop();
+  recording = false; document.body.classList.remove("is-recording"); $("cue").textContent = "";
+  const ext = type.includes("mp4") ? "mp4" : "webm";
+  const blob = new Blob(chunks, { type: type.split(";")[0] });
+  const base = (s.parts[0].roman || s.poet || "reel").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "reel";
+  lastReel = { blob, name: `${base}.${ext}` };
+  if ($("result-video").src) URL.revokeObjectURL($("result-video").src);
+  $("result-video").src = URL.createObjectURL(blob);
+  $("download-status").textContent = "";
+  $("caption-text").value = captionFor(s);
+  $("result").hidden = false; $("result").scrollIntoView({ behavior: "smooth" });
+}
+function captionFor(s) {
+  const sm = s.parts.map((p) => p.shahmukhi).join("\n"), ro = s.parts.map((p) => p.roman).filter(Boolean).join("\n"), en = s.parts.map((p) => p.english).filter(Boolean).join(" ");
+  return `${sm}\n\n${ro}${en ? `\n\n"${en}"` : ""}${s.poet ? "\n— " + s.poet : ""}\n\n#Punjabi #پنجابی #Shahmukhi #PunjabiWisdom #PunjabiPoetry`;
+}
+$("btn-download").addEventListener("click", async () => {
+  if (!lastReel) return;
+  if (!app.downloads) { $("download-status").textContent = "Downloading isn't available in this view. Open the page in the Claude app or claude.ai."; return; }
+  $("download-status").textContent = "Confirm the download…";
+  try { await app.downloads.save({ filename: lastReel.name, data: lastReel.blob }); $("download-status").textContent = "Saved. Find it in your gallery or Downloads, then post it from Instagram."; }
+  catch (e) {
+    const code = e && e.code;
+    $("download-status").textContent = code === "declined" ? "Download cancelled. Tap Download video to try again." : code === "rate_limited" ? "Another download prompt is open. Wait a moment, then try again." : code === "too_large" ? "The video is too large to save here." : "Saving didn't work here (" + (code || "unknown") + ").";
+  }
+});
+$("btn-copy").addEventListener("click", () => {
+  const ta = $("caption-text");
+  navigator.clipboard.writeText(ta.value).then(() => { $("copy-status").textContent = "Copied"; }).catch(() => { ta.select(); $("copy-status").textContent = "Selected. Long-press to copy."; });
+});
+
+// choices
+function bindRadio(name, key, after) {
+  document.querySelectorAll(`input[name="${name}"]`).forEach((r) => {
+    r.checked = r.value === state[key];
+    r.addEventListener("change", () => { state[key] = r.value; local.set("studio." + key, r.value); stopPreview(); after(); updateTimingUI(); });
+  });
+}
+function loadPrefs() {
+  for (const k of ["voice", "music", "bg"]) { const v = local.get("studio." + k, null); if (v && document.querySelector(`input[name="${k === "bg" ? "bg" : k}"][value="${v}"]`) && v !== "file") state[k] = v; }
+  state.key = +local.get("studio.key", "138.59"); state.level = +local.get("studio.level", "30"); state.handle = local.get("studio.handle", "");
+  $("music-key").value = String(state.key); if (!$("music-key").value) { state.key = 138.59; $("music-key").value = "138.59"; }
+  $("music-level").value = state.level; $("music-level-out").textContent = state.level + "%"; $("handle").value = state.handle;
+}
+loadPrefs();
+bindRadio("voice", "voice", loadVoice);
+bindRadio("music", "music", loadMusic);
+bindRadio("bg", "bg", loadBackground);
+$("saying").addEventListener("change", (e) => { state.sayingId = e.target.value; stopPreview(); marks = null; voiceEl && (voiceEl.dataset.k = ""); rebuildScene(); loadVoiceMarks(); });
+function loadVoiceMarks() { const m = state.voice === "library" ? mediaById(state.voiceId) : null; marks = m && Array.isArray(m.marks[state.sayingId]) ? m.marks[state.sayingId] : null; updateTimingUI(); }
+$("voice-pick").addEventListener("change", (e) => { state.voiceId = e.target.value; stopPreview(); loadVoice(); loadVoiceMarks(); });
+$("music-pick").addEventListener("change", (e) => { state.musicId = e.target.value; stopPreview(); loadMusic(); });
+$("bg-pick").addEventListener("change", (e) => { state.bgId = e.target.value; loadBackground(); });
+$("voice-file").addEventListener("change", (e) => { const f = e.target.files[0]; if (!f) return; if (voiceFileUrl) URL.revokeObjectURL(voiceFileUrl); voiceFileUrl = URL.createObjectURL(f); stopPreview(); marks = null; loadVoice(); });
+$("music-file").addEventListener("change", (e) => { const f = e.target.files[0]; if (!f) return; if (musicFileUrl) URL.revokeObjectURL(musicFileUrl); musicFileUrl = URL.createObjectURL(f); stopPreview(); loadMusic(); });
+$("bg-file").addEventListener("change", (e) => { const f = e.target.files[0]; if (!f) return; if (bgFileUrl) URL.revokeObjectURL(bgFileUrl.url); bgFileUrl = { url: URL.createObjectURL(f), video: /^video\//.test(f.type) }; loadBackground(); });
+$("music-key").addEventListener("change", (e) => { state.key = +e.target.value; local.set("studio.key", e.target.value); stopPreview(); });
+$("music-level").addEventListener("input", (e) => { state.level = +e.target.value; local.set("studio.level", e.target.value); $("music-level-out").textContent = state.level + "%"; Mixer.setLevel(); });
+$("handle").addEventListener("input", (e) => { state.handle = e.target.value.trim(); local.set("studio.handle", state.handle); });
+
+// tap timing
+let tapMarks = [];
+$("btn-timing").addEventListener("click", () => {
+  stopPreview();
+  const s = sayingById(state.sayingId);
+  $("timing-list").replaceChildren(...s.parts.map((p, i) => el("li", { id: "tl-" + i, textContent: p.roman || p.shahmukhi })));
+  $("tap").disabled = true; $("tap").textContent = "Tap when line 1 starts";
+  $("timing-msg").textContent = "Press Play, then tap the big button each time a new line starts.";
+  $("timing").hidden = false;
+});
+$("timing-play").addEventListener("click", async () => {
+  tapMarks = [];
+  document.querySelectorAll("#timing-list li").forEach((li) => li.classList.remove("done"));
+  if (Mixer.routed.has(voiceEl)) await Mixer.wake(); // once routed, the voice only plays through the mixer
+  voiceEl.currentTime = 0; voiceEl.play().catch(() => {});
+  voiceEl.onended = () => { $("tap").disabled = true; if (tapMarks.length < sayingById(state.sayingId).parts.length) $("timing-msg").textContent = "The recording ended before every line was tapped. Press Play to try again."; };
+  $("tap").disabled = false; $("tap").textContent = "Tap when line 1 starts"; $("timing-msg").textContent = "Listening…";
+});
+$("tap").addEventListener("click", async () => {
+  const n = sayingById(state.sayingId).parts.length;
+  tapMarks.push(voiceEl.currentTime); $("tl-" + (tapMarks.length - 1)).classList.add("done");
+  if (tapMarks.length < n) { $("tap").textContent = `Tap when line ${tapMarks.length + 1} starts`; return; }
+  marks = tapMarks.slice();
+  $("tap").disabled = true; $("tap").textContent = "All lines timed";
+  $("timing-msg").textContent = "Done. The last line stays until the recording ends.";
+  const m = state.voice === "library" ? mediaById(state.voiceId) : null;
+  if (m && app.db) { try { await app.db.doc("media/" + m.id).update({ marks: { [state.sayingId]: marks } }); } catch (_) { /* timing still used for this reel */ } }
+});
+$("timing-done").addEventListener("click", () => { voiceEl.pause(); voiceEl.onended = null; $("timing").hidden = true; updateTimingUI(); });
+
+// ---------- start ----------
+function renderAll() { renderLibrary(); renderMedia(); fillSayingSelects(); fillMediaSelects(); rebuildScene(); }
+updateUploadForm();
+showView();
+Promise.all([
+  document.fonts.load(`700 60px "Noto Nastaliq Urdu"`, "پنجابی"),
+  document.fonts.load(`italic 600 60px "Cormorant Garamond"`, "Bulleh"),
+  document.fonts.load(`400 40px "Mukta"`, "Bulleh"),
+]).catch(() => {}).then(() => { rebuildScene(); });
+requestAnimationFrame(loop);
+connect();
+</script>
