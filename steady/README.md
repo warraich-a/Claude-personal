@@ -25,7 +25,7 @@ Phone browsers only allow motion sensors on HTTPS pages.
 3. Open `https://<user>.github.io/<repo>/steady/` on your phone.
 4. Install it: Android Chrome → menu → *Add to Home screen* / *Install app*; iPhone Safari → Share → *Add to Home Screen*.
 
-On iPhone, tap **Begin** and allow motion access when asked. If you denied it, the permission resets after you close and reopen the app.
+On iPhone, tap a language button and allow motion access when asked. If you denied it, the permission resets after you close and reopen the app.
 
 ## Punjabi mode
 
