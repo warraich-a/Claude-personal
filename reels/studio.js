@@ -643,7 +643,7 @@ $("btn-copy").addEventListener("click", () => {
   document.querySelector(`input[name="sound"][value="${state.sound}"]`).checked = true;
   $("status").textContent = "Loading sayings and fonts…";
   try {
-    const j = await (await fetch("lines.json")).json();
+    const j = await (await fetch("lines.json", { cache: "no-cache" })).json();
     fileSayings = (j.sayings || j.lines || []).map((r, i) => normalise(r, "f:" + i, false));
   } catch (_) { $("status").textContent = "Couldn't load lines.json. Your own saved sayings still work."; }
   await Promise.all([
