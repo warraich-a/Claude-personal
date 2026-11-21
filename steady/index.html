@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Steady</title>
+<meta name="description" content="Hold the phone still and a message forms. Shake it for the next one.">
+<meta name="theme-color" content="#0B0F14">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Steady">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="stage" aria-hidden="true"></canvas>
+
+<p id="sr-message" class="sr-only" aria-live="polite"></p>
+
+<div id="caption" class="caption" hidden>
+  <span id="author"></span>
+</div>
+
+<div id="hud" class="hud" hidden>
+  <div class="meter" aria-hidden="true"><i id="meter-fill"></i></div>
+  <div class="hud-row">
+    <span id="hint" class="hint">Hold still</span>
+    <div class="hud-actions">
+      <button type="button" id="btn-next">Next</button>
+      <button type="button" id="btn-edit">Messages</button>
+    </div>
+  </div>
+</div>
+
+<section id="intro" class="sheet intro">
+  <div class="sheet-inner">
+    <p class="eyebrow">A message you have to earn</p>
+    <h1>Steady</h1>
+    <p>Hand your phone to someone. The dots drift wherever they tilt it. When they hold it still, the dots settle into a message. Shake it for the next one.</p>
+    <button type="button" id="btn-start" class="primary">Begin</button>
+    <p id="intro-note" class="small">Uses the motion sensor and keeps the screen awake while open. Nothing is recorded or sent anywhere.</p>
+  </div>
+</section>
+
+<section id="editor" class="sheet" hidden aria-labelledby="editor-title">
+  <div class="sheet-inner">
+    <h2 id="editor-title">Your messages</h2>
+    <p class="small">One per line. Add an author after two dashes, like <code>Be kind -- Mum</code>. Messages are saved on this phone only.</p>
+    <label for="editor-text" class="sr-only">Messages, one per line</label>
+    <textarea id="editor-text" rows="10" spellcheck="true"></textarea>
+    <div class="row">
+      <button type="button" id="btn-save" class="primary">Save</button>
+      <button type="button" id="btn-cancel">Cancel</button>
+      <button type="button" id="btn-reset">Restore defaults</button>
+    </div>
+  </div>
+</section>
+
+<script src="app.js"></script>
+</body>
+</html>
