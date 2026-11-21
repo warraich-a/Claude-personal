@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Reel Studio</title>
+<meta name="description" content="Make Punjabi reels: one line in Shahmukhi and Gurmukhi, read aloud word by word.">
+<meta name="theme-color" content="#1A0909">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anek+Gurmukhi:wght@600&family=Cormorant+Garamond:ital,wght@1,600&family=Mukta:wght@400;600&family=Noto+Nastaliq+Urdu:wght@700&family=Noto+Sans+Gurmukhi:wght@600&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="app">
+  <header class="top">
+    <h1>Reel Studio</h1>
+    <p class="sub">One line, two scripts. <span lang="pnb" dir="rtl">پنجابی</span> · <span lang="pa">ਪੰਜਾਬੀ</span></p>
+  </header>
+
+  <div class="preview">
+    <canvas id="stage" aria-label="Reel preview"></canvas>
+    <p id="cue" class="cue" aria-live="assertive"></p>
+  </div>
+
+  <div class="controls">
+    <div class="row">
+      <button type="button" id="btn-preview">Play preview</button>
+      <button type="button" id="btn-record" class="primary">Record reel</button>
+      <span id="length" class="meta"></span>
+    </div>
+    <p id="status" class="status" aria-live="polite"></p>
+
+    <label for="line">Line</label>
+    <select id="line"></select>
+    <p id="check-warn" class="warn" hidden>Not checked yet. Compare both scripts with a published source before posting.</p>
+    <p id="align-warn" class="warn" hidden>The three versions of this line have different word counts, so word highlighting is off. Check the spacing in lines.json.</p>
+
+    <fieldset>
+      <legend>Background</legend>
+      <div class="choices">
+        <label class="choice"><input type="radio" name="bg" value="phulkari"><span><b>Phulkari</b>Golden silk stitches on madder red</span></label>
+        <label class="choice"><input type="radio" name="bg" value="sarson"><span><b>Sarson at dusk</b>Mustard fields under an evening sky</span></label>
+        <label class="choice"><input type="radio" name="bg" value="own"><span><b>Your photo or video</b>Darkened so the words stay readable</span></label>
+      </div>
+      <div id="own-picker" hidden>
+        <label for="own-file">Choose a photo or video</label>
+        <input id="own-file" type="file" accept="image/*,video/*">
+      </div>
+    </fieldset>
+
+    <label for="pace">Reading pace</label>
+    <select id="pace">
+      <option value="1.1">Slow, about 1 second per word</option>
+      <option value="0.8">Steady, about 0.8 seconds per word</option>
+      <option value="0.6">Brisk, about 0.6 seconds per word</option>
+    </select>
+
+    <label for="handle">Your handle on the end card</label>
+    <input id="handle" type="text" placeholder="@yourpage" autocomplete="off" autocapitalize="off" spellcheck="false">
+
+    <label class="check"><input id="voice" type="checkbox" checked> Record my voice</label>
+    <label class="check"><input id="denoise" type="checkbox" checked> Reduce background noise</label>
+    <p class="hint">Recording counts down from 3. Read each word when it turns gold. The words on this screen under the preview are only for you and aren't in the video.</p>
+  </div>
+
+  <section id="result" class="result" hidden aria-labelledby="result-title">
+    <h2 id="result-title">Your reel</h2>
+    <video id="result-video" controls playsinline></video>
+    <p id="format-warn" class="warn" hidden>This phone recorded WebM, which Instagram may refuse. Updating Chrome usually gives MP4.</p>
+    <div class="row">
+      <button type="button" id="btn-share" class="primary">Share…</button>
+      <a id="btn-save" class="button">Save video</a>
+    </div>
+    <label for="caption-text">Caption</label>
+    <textarea id="caption-text" rows="9"></textarea>
+    <div class="row"><button type="button" id="btn-copy">Copy caption</button><span id="copy-status" class="meta" aria-live="polite"></span></div>
+  </section>
+</main>
+<script src="studio.js"></script>
+</body>
+</html>
