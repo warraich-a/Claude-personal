@@ -31,7 +31,7 @@ header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; b
 .brand { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
 h1 { margin: 0; font: italic 600 1.7rem/1.1 var(--display); color: var(--gold); }
 .brand .sm-word { font: 700 1.2rem/1 var(--sm); color: var(--muted); }
-nav.tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+nav.tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
 nav.tabs button { text-align: center; color: var(--muted); font-weight: 600; padding: 8px 6px; border-radius: 10px; border: 1px solid var(--line); background: transparent; }
 nav.tabs button[aria-current="page"] { color: #2A0E08; background: var(--gold); border-color: var(--gold); }
 .count { font-variant-numeric: tabular-nums; opacity: .8; }
@@ -103,6 +103,21 @@ button.big { width: 100%; padding: 16px; font-size: 1.1rem; }
 .result video { width: 100%; max-height: 65vh; background: #000; border-radius: 12px; }
 .is-recording header.top, .is-recording .studio-controls, .is-recording .result { display: none; }
 
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips button { padding: 5px 10px; font-size: 0.82rem; font-weight: 400; }
+/* posts */
+.stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
+.stats label { display: flex; flex-direction: column; gap: 4px; }
+.stats input { width: 100%; font: 1rem var(--ui); color: var(--text); background: var(--ground); border: 1px solid var(--line); border-radius: 8px; padding: 8px; font-variant-numeric: tabular-nums; }
+.tag { font-size: 0.78rem; padding: 2px 8px; border-radius: 999px; background: var(--panel-2); color: var(--muted); }
+.tag.due { background: transparent; border: 1px solid var(--warn); color: var(--warn); }
+.ins-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; font-variant-numeric: tabular-nums; }
+.ins-table th, .ins-table td { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--line); }
+.ins-table th { color: var(--muted); font-weight: 600; }
+.ins-table td.num, .ins-table th.num { text-align: right; }
+.ins-table tr.best td { color: var(--gold); }
+.ins-group { display: flex; flex-direction: column; gap: 4px; }
+.ins-wrap { overflow-x: auto; }
 /* media */
 .shelf { display: flex; flex-direction: column; gap: 8px; }
 .item { display: flex; gap: 10px; align-items: center; padding: 10px 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
@@ -124,6 +139,7 @@ progress { width: 100%; accent-color: var(--gold); }
       <button type="button" data-view="library">Library <span class="count" id="count-review"></span></button>
       <button type="button" data-view="studio">Studio</button>
       <button type="button" data-view="media">Media</button>
+      <button type="button" data-view="posts">Posts <span class="count" id="count-stats"></span></button>
     </nav>
   </header>
   <p id="offline" class="banner" hidden></p>
@@ -164,6 +180,13 @@ progress { width: 100%; accent-color: var(--gold); }
           <label for="saying">Saying</label>
           <select id="saying"></select>
           <p id="saying-warn" class="warn" hidden>This saying isn't approved yet. Don't post it until it has been checked against its source.</p>
+        </div>
+
+        <div class="field">
+          <label for="hook">Opening hook: big text for the first 2 seconds, before the saying</label>
+          <input id="hook" type="text" maxlength="60" placeholder="Leave empty for no hook" autocomplete="off">
+          <div class="chips" id="hook-ideas" role="group" aria-label="Hook ideas"></div>
+          <p class="hint">People decide in the first two seconds whether to keep watching. A short question or a surprising fact works best.</p>
         </div>
 
         <div class="field">
@@ -242,9 +265,31 @@ progress { width: 100%; accent-color: var(--gold); }
           <button type="button" id="btn-download" class="primary">Download video</button>
           <span id="download-status" class="hint" aria-live="polite"></span>
         </div>
+        <div class="field">
+          <label for="cap-question">Question to invite comments</label>
+          <select id="cap-question">
+            <option value="Who used to say this to you growing up?">Who used to say this to you growing up?</option>
+            <option value="Which line should we do next? Tell us below.">Which line should we do next?</option>
+            <option value="How would you say this in your village's Punjabi?">How would you say this in your village's Punjabi?</option>
+            <option value="Could you read it before you saw the meaning?">Could you read it before you saw the meaning?</option>
+            <option value="Do you know who first said this?">Do you know who first said this?</option>
+            <option value="">No question</option>
+          </select>
+        </div>
+        <label class="check"><input id="cap-send" type="checkbox" checked> Ask people to send it to someone</label>
         <label for="caption-text">Caption</label>
-        <textarea id="caption-text" rows="9"></textarea>
+        <textarea id="caption-text" rows="11"></textarea>
         <div class="row"><button type="button" id="btn-copy">Copy caption</button><span id="copy-status" class="hint" aria-live="polite"></span></div>
+        <label for="alt-text">Alt text (Instagram: Advanced settings → Accessibility)</label>
+        <textarea id="alt-text" rows="3"></textarea>
+        <div class="row"><button type="button" id="btn-copy-alt">Copy alt text</button><span id="copy-alt-status" class="hint" aria-live="polite"></span></div>
+        <div class="box" style="background: var(--panel-2)">
+          <h3>After you post it</h3>
+          <p class="hint">Log it here, then add its numbers from Instagram Insights after about 3 days. The Posts tab shows what's working.</p>
+          <div class="field"><label for="post-date">Posted on</label><input id="post-date" type="date"></div>
+          <div class="field"><label for="post-link">Link to the reel (optional)</label><input id="post-link" type="url" placeholder="https://www.instagram.com/reel/…"></div>
+          <div class="row"><button type="button" id="btn-log-post">Save to Posts</button><span id="log-status" class="hint" aria-live="polite"></span></div>
+        </div>
       </div>
     </section>
 
@@ -276,6 +321,16 @@ progress { width: 100%; accent-color: var(--gold); }
       <h3>Voices</h3><div class="shelf" id="shelf-voice"></div>
       <h3>Music</h3><div class="shelf" id="shelf-music"></div>
       <h3>Backgrounds</h3><div class="shelf" id="shelf-background"></div>
+    </section>
+    <!-- POSTS -->
+    <section class="view" id="view-posts" aria-labelledby="h-posts" hidden>
+      <h2 id="h-posts">Posts</h2>
+      <p class="hint">Every reel you log from the studio appears here. About 3 days after posting, open the reel's Insights on Instagram and copy the numbers in. With 10 or more posts, the patterns below become worth trusting.</p>
+      <div class="box">
+        <h3>What's working</h3>
+        <div id="insights"></div>
+      </div>
+      <div class="cards" id="posts"></div>
     </section>
   </main>
 </div>
@@ -340,18 +395,18 @@ window.addEventListener("unhandledrejection", (e) => { const r = e.reason; showE
 
 const app = {
   db: null, assets: null, downloads: null,
-  sayings: [], media: [],
+  sayings: [], media: [], posts: [],
   filter: "candidate", openCard: null,
 };
 const state = {
-  sayingId: null, voice: "library", voiceId: "", music: "tanpura", musicId: "", bg: "phulkari", bgId: "",
-  key: 138.59, level: 30, handle: "",
+  sayingId: null, voice: "none", voiceId: "", music: "tanpura", musicId: "", bg: "phulkari", bgId: "",
+  key: 138.59, level: 30, handle: "", hook: "",
 };
 
 // ---------- tabs ----------
 /* Screens switch directly. The address is updated only as a bookmark and is never relied on:
    inside the Claude app the page runs in a frame where in-page links may not navigate. */
-const VIEWS = ["library", "studio", "media"];
+const VIEWS = ["library", "studio", "media", "posts"];
 function setView(v) {
   if (!VIEWS.includes(v)) v = "library";
   document.querySelectorAll("nav.tabs button").forEach((b) => b.setAttribute("aria-current", b.dataset.view === v ? "page" : "false"));
@@ -392,6 +447,8 @@ async function connect() {
   const db = await c.use("db");
   if (!db) { offline("The library can't be reached in this view. The studio still works with files from your phone."); renderAll(); return; }
   app.db = db;
+  db.collection("posts").onSnapshot((snap) => { app.posts = snap.docs.map((d) => ({ id: d.id, ...d.data() })); renderPosts(); },
+    (e) => offline("The posts list stopped updating (" + e.code + ")."));
   const slow = setTimeout(() => offline("The library is taking a while to load. It may be out of date."), 10000);
   db.collection("sayings").onSnapshot((snap) => {
     if (!snap.metadata.fromCache) { clearTimeout(slow); $("offline").hidden = true; }
@@ -662,6 +719,10 @@ function fillMediaSelects() {
     sel.value = state[key];
   };
   fill($("voice-pick"), "voice", "voiceId", "No voices on the shelf yet");
+  if (state.voice === "library" && !app.media.some((m) => m.kind === "voice")) {
+    state.voice = "none";
+    const r = document.querySelector('input[name="voice"][value="none"]'); if (r) r.checked = true;
+  }
   fill($("music-pick"), "music", "musicId", "No music on the shelf yet");
   fill($("bg-pick"), "background", "bgId", "No backgrounds on the shelf yet");
   loadVoice(); loadMusic(); loadBackground();
@@ -1037,6 +1098,7 @@ function rebuildScene() {
   layouts = s ? s.parts.map((p) => layoutPart(ctx, p)) : [];
   Object.values(BACKGROUNDS).forEach((b) => b.reset());
   $("saying-warn").hidden = !s || s.status === "approved";
+  fillHookIdeas();
   fillMediaSelects();
   updateTimingUI();
 }
@@ -1059,9 +1121,11 @@ function drawPart(c, L, dt, alpha) {
     c.globalAlpha = 1;
   }
 }
-function render(c, t, tl) {
+/* t is the time in the saying; during an opening hook it runs from -H up to 0. */
+function render(c, t, tl, H = 0) {
   const s = sayingById(state.sayingId);
-  BACKGROUNDS[state.bg].draw(c, t);
+  BACKGROUNDS[state.bg].draw(c, t + H);
+  if (t < 0) { drawHook(c, t, H); return; }
   if (!s) { c.fillStyle = C.muted; c.font = `400 44px ${F.body}`; c.textAlign = "center"; c.fillText("Choose a saying", RW / 2, RH / 2); return; }
   const outro = ease((t - tl.end) / 0.5);
   c.globalAlpha = ease((t - 0.2) / 0.6) * (1 - outro);
@@ -1080,6 +1144,32 @@ function render(c, t, tl) {
     if (state.handle) { c.font = `600 46px ${F.body}`; c.fillStyle = C.muted; c.fillText(state.handle, RW / 2, 1120); }
     c.globalAlpha = 1;
   }
+}
+
+function drawHook(c, t, H) {
+  const text = state.hook.trim();
+  if (!text) return;
+  const a = Math.min(ease((t + H) / 0.25), 1 - ease((t + 0.3) / 0.3));
+  c.save(); c.globalAlpha = a; c.textAlign = "center"; c.textBaseline = "middle"; c.direction = "ltr";
+  c.shadowColor = "rgba(0,0,0,0.6)"; c.shadowBlur = 18; c.fillStyle = C.gold;
+  let size = 96; for (; size > 56; size -= 4) { c.font = `700 ${size}px ${F.body}`; if (lineCount(c, text, RW - 300) <= 3) break; }
+  c.font = `700 ${size}px ${F.body}`;
+  const n = lineCount(c, text, RW - 300);
+  wrapCentered(c, text, 860 - ((n - 1) * size * 1.2) / 2, RW - 300, size * 1.2);
+  c.restore();
+}
+const hookDur = () => (state.hook.trim() ? 2.0 : 0);
+/* Wraps a clock so the saying starts after the hook. If the inner clock (the voice) can't start,
+   time carries on from the wall clock so the reel still plays. */
+function withHook(inner, H) {
+  let t0 = 0, started = false, failed = false;
+  const go = () => inner.start().then(() => { started = true; }, () => { failed = true; });
+  return {
+    start() { t0 = performance.now(); if (H > 0) { setTimeout(go, H * 1000); return Promise.resolve(); } return go(); },
+    now() { const e = (performance.now() - t0) / 1000; return e < H || !started || failed ? e - H : inner.now(); },
+    stop() { inner.stop(); },
+    get failed() { return failed; },
+  };
 }
 
 // ---------- studio controls ----------
@@ -1103,7 +1193,7 @@ function updateTimingUI() {
     : !s ? "" : s.parts.length === 1 ? "One line: it shows for the whole recording."
     : timed ? `Timed: ${s.parts.length} lines.` : "Not timed yet. Lines are spread evenly until you time them.";
   $("btn-timing").hidden = !usesVoice() || !voiceReady() || !s || s.parts.length < 2;
-  $("length").textContent = s ? `${Math.round(tl.total)} s` : "";
+  $("length").textContent = s ? `${Math.round(hookDur() + tl.total)} s` : "";
 }
 function wallClock() { let t0 = 0; return { start() { t0 = performance.now(); return Promise.resolve(); }, now() { return (performance.now() - t0) / 1000; }, stop() {} }; }
 function voiceClock() {
@@ -1123,19 +1213,30 @@ function ready() {
 function loop() {
   requestAnimationFrame(loop);
   if (recording || $("view-studio").hidden) return;
-  if (preview) { const t = preview.clock.now(); if (t > preview.tl.total) stopPreview(); else { render(ctx, t, preview.tl); return; } }
+  if (preview) { const t = preview.clock.now(); if (t > preview.tl.total) stopPreview(); else { render(ctx, t, preview.tl, preview.H); return; } }
   const tl = timeline(); render(ctx, (tl.marks[0] || 0) + 2.2, tl);
 }
 function stopPreview() { if (preview) { preview.clock.stop(); Mixer.stop(); } preview = null; $("btn-preview").textContent = "Play preview"; }
+const within = (p, ms) => Promise.race([p, new Promise((_, no) => setTimeout(() => no(new Error("timed out")), ms))]);
+/* Preview always plays the pictures. A missing voice or music is skipped with a note, and if sound
+   can't start in this view the preview runs silently instead of doing nothing. */
 $("btn-preview").addEventListener("click", async () => {
   if (preview) { stopPreview(); return; }
-  if (!ready()) return;
-  const tl = timeline(), clock = usesVoice() ? voiceClock() : wallClock();
+  if (!sayingById(state.sayingId)) { $("status").textContent = "Choose a saying first. The library may still be loading."; return; }
+  const notes = [];
+  const withVoice = usesVoice() && voiceReady();
+  if (usesVoice() && !withVoice) notes.push("no voice chosen yet");
+  const musicMissing = (state.music === "library" || state.music === "file") && !(musicEl && musicEl.getAttribute("src"));
+  if (musicMissing) notes.push("no music chosen yet");
+  const tl = timeline(), H = hookDur();
   Object.values(BACKGROUNDS).forEach((b) => b.reset());
   if (bgMedia instanceof HTMLVideoElement) { bgMedia.currentTime = 0; bgMedia.play().catch(() => {}); }
-  await Mixer.start(tl.total);
-  await clock.start().catch(() => {});
-  preview = { clock, tl }; $("btn-preview").textContent = "Stop preview";
+  const clock = withHook(withVoice ? voiceClock() : wallClock(), H);
+  preview = { clock, tl, H };
+  $("btn-preview").textContent = "Stop preview";
+  try { await within(Mixer.start(H + tl.total), 2000); } catch (_) { notes.push("sound couldn't start here, so this preview is silent"); }
+  if (preview && preview.clock === clock) await clock.start();
+  $("status").textContent = notes.length ? "Previewing with " + notes.join("; ") + "." : "";
 });
 
 $("btn-record").addEventListener("click", () => makeReel().catch((e) => {
@@ -1160,12 +1261,12 @@ async function makeReel() {
   $("cue").textContent = "Making the reel… keep this screen open";
   const rec = new MediaRecorder(stream, { mimeType: type, videoBitsPerSecond: 8_000_000 });
   const chunks = []; rec.ondataavailable = (e) => e.data.size && chunks.push(e.data);
-  const clock = usesVoice() ? voiceClock() : wallClock();
+  const H = hookDur(), clock = withHook(usesVoice() ? voiceClock() : wallClock(), H);
   if (bgMedia instanceof HTMLVideoElement) { bgMedia.currentTime = 0; bgMedia.play().catch(() => {}); }
   rec.start(250);
-  await Mixer.start(tl.total);
+  await Mixer.start(H + tl.total);
   await clock.start();
-  await new Promise((done) => { (function tick() { const t = clock.now(); if (t > tl.total) return done(); requestAnimationFrame(tick); render(ctx, t, tl); })(); });
+  await new Promise((done) => { (function tick() { const t = clock.now(); if (t > tl.total) return done(); requestAnimationFrame(tick); render(ctx, t, tl, H); })(); });
   clock.stop();
   await new Promise((r) => { rec.onstop = r; rec.stop(); });
   Mixer.stop();
@@ -1173,16 +1274,151 @@ async function makeReel() {
   const ext = type.includes("mp4") ? "mp4" : "webm";
   const blob = new Blob(chunks, { type: type.split(";")[0] });
   const base = (s.parts[0].roman || s.poet || "reel").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "reel";
-  lastReel = { blob, name: `${base}.${ext}` };
+  const v = state.voice === "library" ? mediaById(state.voiceId) : null;
+  lastReel = { blob, name: `${base}.${ext}`, meta: { sayingId: s.id, title: s.parts[0].roman || s.parts[0].shahmukhi, poet: s.poet, hook: state.hook.trim(), bg: state.bg, music: state.music, voice: state.voice === "none" ? "none" : "voice", contributor: v ? v.contributor : "" } };
+  $("post-date").value = new Date().toISOString().slice(0, 10); $("post-link").value = ""; $("log-status").textContent = "";
   if ($("result-video").src) URL.revokeObjectURL($("result-video").src);
   $("result-video").src = URL.createObjectURL(blob);
   $("download-status").textContent = "";
-  $("caption-text").value = captionFor(s);
+  refreshCaption();
   $("result").hidden = false; $("result").scrollIntoView({ behavior: "smooth" });
+}
+/* Caption: the saying, then one question and one share prompt (comments and DM sends are what
+   spread a reel), then about five targeted hashtags rather than thirty generic ones. */
+function hashtagsFor(s) {
+  const p = (s.poet || "").toLowerCase(), tags = ["#Punjabi", "#پنجابی", "#Shahmukhi"];
+  const poets = [["bulleh", "#BullehShah"], ["waris", "#WarisShah"], ["hussain", "#ShahHussain"], ["bahu", "#SultanBahu"], ["farid", "#BabaFarid"], ["mian muhammad", "#MianMuhammadBakhsh"]];
+  const hit = poets.find(([k]) => p.includes(k));
+  if (hit) tags.push(hit[1], "#SufiPoetry");
+  else if (p.includes("proverb") || p.includes("akhaan")) tags.push("#PunjabiProverbs", "#PunjabiWisdom");
+  else tags.push("#PunjabiWisdom", "#PunjabiPoetry");
+  return tags.join(" ");
 }
 function captionFor(s) {
   const sm = s.parts.map((p) => p.shahmukhi).join("\n"), ro = s.parts.map((p) => p.roman).filter(Boolean).join("\n"), en = s.parts.map((p) => p.english).filter(Boolean).join(" ");
-  return `${sm}\n\n${ro}${en ? `\n\n"${en}"` : ""}${s.poet ? "\n— " + s.poet : ""}\n\n#Punjabi #پنجابی #Shahmukhi #PunjabiWisdom #PunjabiPoetry`;
+  const q = $("cap-question").value, send = $("cap-send").checked;
+  return [sm, ro, en ? `"${en}"` + (s.poet ? `\n— ${s.poet}` : "") : s.poet ? `— ${s.poet}` : "",
+    q, send ? "Send this to someone who still speaks Punjabi at home." : "", hashtagsFor(s)].filter(Boolean).join("\n\n");
+}
+function altFor(s) {
+  const ro = s.parts.map((p) => p.roman).filter(Boolean).join(" / "), en = s.parts.map((p) => p.english).filter(Boolean).join(" ").replace(/[.!?]+$/, "");
+  return `A Punjabi saying in Shahmukhi script${s.poet ? " by " + s.poet : ""}${ro ? `, read as "${ro}"` : ""}${en ? `, meaning "${en}"` : ""}.`;
+}
+function refreshCaption() { const s = lastReel && sayingById(lastReel.meta.sayingId); if (!s) return; $("caption-text").value = captionFor(s); $("alt-text").value = altFor(s); }
+$("cap-question").addEventListener("change", refreshCaption);
+$("cap-send").addEventListener("change", refreshCaption);
+$("btn-copy-alt").addEventListener("click", () => {
+  const ta = $("alt-text");
+  navigator.clipboard.writeText(ta.value).then(() => { $("copy-alt-status").textContent = "Copied"; }).catch(() => { ta.select(); $("copy-alt-status").textContent = "Selected. Long-press to copy."; });
+});
+
+// hook ideas
+function fillHookIdeas() {
+  const s = sayingById(state.sayingId);
+  const ideas = ["Can you read this? ↓", "Your nani knew this one", "One line every Punjabi should know", "Still true, centuries later"];
+  if (s && s.poet && !/proverb/i.test(s.poet) && !/attributed/i.test(s.poet)) ideas.unshift(`${s.poet.split(",")[0]} said this…`);
+  if (s && /proverb/i.test(s.poet)) ideas.unshift("A Punjabi proverb you'll use today");
+  $("hook-ideas").replaceChildren(...ideas.map((t) => { const b = el("button", { type: "button", textContent: t }); b.onclick = () => { $("hook").value = t; setHook(t); }; return b; }));
+}
+function setHook(t) { state.hook = t; local.set("studio.hook", t); stopPreview(); updateTimingUI(); }
+$("hook").addEventListener("input", (e) => setHook(e.target.value));
+
+// ---------- posts ----------
+const BG_NAME = { phulkari: "Phulkari", sarson: "Sarson", diya: "Diya lights", rivers: "Five rivers", library: "Own photo/video", file: "Own photo/video" };
+const MUSIC_NAME = { tanpura: "Tanpura", harmonium: "Harmonium", library: "Own music", file: "Own music", none: "No music" };
+const STAT_FIELDS = [["views", "Views"], ["watch", "Avg watch (s)"], ["shares", "Shares"], ["saves", "Saves"], ["likes", "Likes"], ["comments", "Comments"], ["follows", "Follows"]];
+$("btn-log-post").addEventListener("click", async () => {
+  if (!lastReel) return;
+  if (!app.db) { $("log-status").textContent = "The posts list can't be reached in this view."; return; }
+  $("btn-log-post").disabled = true;
+  try {
+    await app.db.collection("posts").add({ ...lastReel.meta, postedOn: $("post-date").value || new Date().toISOString().slice(0, 10), link: $("post-link").value.trim(), stats: {}, created: nowIso() });
+    $("log-status").textContent = "Saved to Posts. Add its numbers in about 3 days.";
+  } catch (e) { $("log-status").textContent = "Couldn't save (" + (e.code || e) + ")."; }
+  $("btn-log-post").disabled = false;
+});
+const daysSince = (d) => (Date.now() - new Date(d + "T12:00:00").getTime()) / 86400000;
+const hasStats = (p) => p.stats && Number(p.stats.views) > 0;
+function renderPosts() {
+  const list = [...app.posts].sort((a, b) => String(b.postedOn).localeCompare(String(a.postedOn)));
+  const due = list.filter((p) => !hasStats(p) && daysSince(p.postedOn) >= 2).length;
+  $("count-stats").textContent = due ? `(${due})` : "";
+  $("posts").replaceChildren(...(list.length ? list.map(postCard) : [el("p", { className: "empty", textContent: "No posts logged yet. After you post a reel, tap Save to Posts under it in the studio." })]));
+  renderInsights();
+}
+function postCard(p) {
+  const card = el("article", { className: "card" });
+  const tags = el("div", { className: "meta" },
+    el("span", { textContent: p.postedOn || "no date" }),
+    !hasStats(p) && daysSince(p.postedOn) >= 2 ? el("span", { className: "tag due", textContent: "add numbers" }) : null,
+    el("span", { className: "tag", textContent: p.hook ? "hook: " + p.hook : "no hook" }),
+    el("span", { className: "tag", textContent: BG_NAME[p.bg] || p.bg }),
+    el("span", { className: "tag", textContent: MUSIC_NAME[p.music] || p.music }),
+    el("span", { className: "tag", textContent: p.voice === "none" ? "no voice" : p.contributor ? "voice: " + p.contributor : "voice" }));
+  card.append(el("p", { className: "roman", textContent: p.title || "Untitled" }), p.poet ? el("p", { className: "hint", textContent: p.poet }) : null, tags);
+  if (p.link && /^https:\/\//.test(p.link)) card.append(el("a", { href: p.link, target: "_blank", rel: "noopener noreferrer", className: "hint", textContent: "Open on Instagram" }));
+  const grid = el("div", { className: "stats" });
+  const inputs = {};
+  STAT_FIELDS.forEach(([k, label]) => {
+    const inp = el("input", { type: "number", min: "0", step: k === "watch" ? "0.1" : "1", inputMode: "decimal", value: p.stats && p.stats[k] != null ? p.stats[k] : "" });
+    inp.id = `st-${p.id}-${k}`; inputs[k] = inp;
+    grid.append(el("label", { htmlFor: inp.id }, label, inp));
+  });
+  const save = el("button", { type: "button", className: "small", textContent: "Save numbers" });
+  const msg = el("span", { className: "hint", role: "status" });
+  save.onclick = async () => {
+    const stats = {};
+    for (const [k] of STAT_FIELDS) { const v = inputs[k].value.trim(); if (v !== "") stats[k] = Math.max(0, Number(v)); }
+    try { await app.db.doc("posts/" + p.id).update({ stats, statsOn: new Date().toISOString().slice(0, 10) }); msg.textContent = "Saved"; }
+    catch (e) { msg.textContent = "Couldn't save (" + (e.code || e) + ")"; }
+  };
+  const del = el("button", { type: "button", className: "small danger", textContent: "Remove" });
+  del.onclick = async () => {
+    if (del.dataset.confirm !== "1") { del.dataset.confirm = "1"; del.textContent = "Tap to confirm"; return; }
+    try { await app.db.doc("posts/" + p.id).delete(); } catch (e) { msg.textContent = "Couldn't remove (" + (e.code || e) + ")"; }
+  };
+  card.append(grid, el("div", { className: "row" }, save, del, msg));
+  return card;
+}
+/* Compare groups of posts by average views and by shares per 1,000 views (shares reach new people).
+   With few posts, differences are mostly chance, so the page says so. */
+function renderInsights() {
+  const done = app.posts.filter(hasStats);
+  const box = $("insights");
+  if (done.length < 3) { box.replaceChildren(el("p", { className: "hint", textContent: `Add numbers for at least 3 posts to see patterns. ${done.length ? `So far: ${done.length}.` : ""}` })); return; }
+  const n = (v) => Number(v) || 0;
+  const dims = [
+    ["Opening hook", (p) => (p.hook ? "With a hook" : "No hook")],
+    ["Background", (p) => BG_NAME[p.bg] || p.bg || "?"],
+    ["Music", (p) => MUSIC_NAME[p.music] || p.music || "?"],
+    ["Voice", (p) => (p.voice === "none" ? "No voice" : "With a voice")],
+    ["Poet or source", (p) => (p.poet || "Unknown").split(",")[0]],
+  ];
+  const parts = [];
+  const totalViews = done.reduce((a, p) => a + n(p.stats.views), 0);
+  const best = [...done].sort((a, b) => n(b.stats.views) - n(a.stats.views))[0];
+  parts.push(el("p", { className: "hint", textContent: `${done.length} posts with numbers, ${Math.round(totalViews / done.length).toLocaleString("en-GB")} views on average. Best so far: "${best.title}" with ${n(best.stats.views).toLocaleString("en-GB")} views.` }));
+  if (done.length < 10) parts.push(el("p", { className: "warn", textContent: "Fewer than 10 posts: treat these as hints, not results." }));
+  for (const [name, key] of dims) {
+    const groups = new Map();
+    for (const p of done) { const g = key(p); if (!groups.has(g)) groups.set(g, []); groups.get(g).push(p); }
+    if (groups.size < 2) continue;
+    const rows = [...groups.entries()].map(([g, ps]) => {
+      const views = ps.reduce((a, p) => a + n(p.stats.views), 0);
+      const shares = ps.reduce((a, p) => a + n(p.stats.shares), 0);
+      const watch = ps.filter((p) => n(p.stats.watch) > 0);
+      return { g, count: ps.length, avgViews: views / ps.length, sharesPerK: views ? (shares / views) * 1000 : 0, avgWatch: watch.length ? watch.reduce((a, p) => a + n(p.stats.watch), 0) / watch.length : null };
+    }).sort((a, b) => b.avgViews - a.avgViews);
+    const table = el("table", { className: "ins-table" },
+      el("thead", null, el("tr", null, el("th", { textContent: name }), el("th", { className: "num", textContent: "Posts" }), el("th", { className: "num", textContent: "Avg views" }), el("th", { className: "num", textContent: "Shares / 1k" }), el("th", { className: "num", textContent: "Avg watch" }))),
+      el("tbody", null, rows.map((r, i) => el("tr", { className: i === 0 && r.count >= 2 ? "best" : "" },
+        el("td", { textContent: r.g }), el("td", { className: "num", textContent: String(r.count) }),
+        el("td", { className: "num", textContent: Math.round(r.avgViews).toLocaleString("en-GB") }),
+        el("td", { className: "num", textContent: r.sharesPerK.toFixed(1) }),
+        el("td", { className: "num", textContent: r.avgWatch == null ? "–" : r.avgWatch.toFixed(1) + " s" })))));
+    parts.push(el("div", { className: "ins-group" }, el("div", { className: "ins-wrap" }, table)));
+  }
+  box.replaceChildren(...parts);
 }
 $("btn-download").addEventListener("click", async () => {
   if (!lastReel) return;
@@ -1211,6 +1447,7 @@ function loadPrefs() {
   state.key = +local.get("studio.key", "138.59"); state.level = +local.get("studio.level", "30"); state.handle = local.get("studio.handle", "");
   $("music-key").value = String(state.key); if (!$("music-key").value) { state.key = 138.59; $("music-key").value = "138.59"; }
   $("music-level").value = state.level; $("music-level-out").textContent = state.level + "%"; $("handle").value = state.handle;
+  state.hook = local.get("studio.hook", ""); $("hook").value = state.hook;
 }
 loadPrefs();
 bindRadio("voice", "voice", loadVoice);
@@ -1259,7 +1496,7 @@ $("tap").addEventListener("click", async () => {
 $("timing-done").addEventListener("click", () => { voiceEl.pause(); voiceEl.onended = null; $("timing").hidden = true; updateTimingUI(); });
 
 // ---------- start ----------
-function renderAll() { renderLibrary(); renderMedia(); fillSayingSelects(); fillMediaSelects(); rebuildScene(); }
+function renderAll() { renderLibrary(); renderMedia(); renderPosts(); fillSayingSelects(); fillMediaSelects(); rebuildScene(); }
 updateUploadForm();
 showView();
 Promise.all([

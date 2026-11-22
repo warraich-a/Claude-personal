@@ -6,4 +6,6 @@ Source of the artifact published at https://claude.ai/artifact/MBSWumccymSRZ2Ffj
 - **Media**: voices, music and backgrounds stored as artifact assets and indexed in `media`. Audio that isn't MP4/WebM is converted on the phone before upload.
 - **Studio**: renders a 1080×1920 reel (backgrounds: phulkari, sarson, diya lights, five rivers, or a stored/local image or video; music: tanpura, harmonium, stored or local file), mixes it with the voice, and saves the MP4 through the downloads capability.
 
+- **Growth**: an optional 2-second opening hook, captions with a comment question, a share prompt and about five targeted hashtags, alt text, and a **Posts** tab that logs each reel's settings and Instagram Insights numbers and compares hooks, backgrounds, music, voices and poets.
+
 The file is published as-is by the Artifact tool, which adds the HTML skeleton, so it has no `<!doctype>` of its own.
