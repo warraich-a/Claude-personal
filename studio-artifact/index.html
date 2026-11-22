@@ -82,6 +82,7 @@ button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-
 .details { display: flex; flex-direction: column; gap: 8px; border-top: 1px dashed var(--line); padding-top: 8px; }
 .part { display: flex; flex-direction: column; gap: 2px; }
 .part .sm-line { font-size: 1.15rem; }
+.part .sm-line.fa { font-size: 1rem; color: var(--muted); }
 .part .en { font-size: 0.92rem; }
 .sources { margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 4px; font-size: 0.88rem; }
 .sources a { color: var(--gold); overflow-wrap: anywhere; }
@@ -167,6 +168,7 @@ progress { width: 100%; accent-color: var(--gold); }
         <button type="button" class="small" data-series="all" aria-pressed="true">All series</button>
         <button type="button" class="small" data-series="sufi" aria-pressed="false">Sufi line</button>
         <button type="button" class="small" data-series="akhaan" aria-pressed="false">Akhaan</button>
+        <button type="button" class="small" data-series="rumi" aria-pressed="false">Rumi</button>
         <button type="button" class="small" data-series="" aria-pressed="false">No series</button>
       </div>
       <div class="filters" role="group" aria-label="Show">
@@ -364,8 +366,9 @@ progress { width: 100%; accent-color: var(--gold); }
     <h2 id="editor-title">Saying</h2>
     <p class="hint">One line per row. Row 1 of each box belongs together, and each row becomes one screen of the reel.</p>
     <div class="field"><label for="ed-series">Series</label>
-      <select id="ed-series"><option value="sufi">Sufi line of the week</option><option value="akhaan">Akhaan (proverbs)</option><option value="">No series</option></select></div>
+      <select id="ed-series"><option value="sufi">Sufi line of the week</option><option value="akhaan">Akhaan (proverbs)</option><option value="rumi">Rumi in Punjabi</option><option value="">No series</option></select></div>
     <div class="field"><label for="ed-poet">Poet or source</label><input id="ed-poet" type="text" placeholder="Bulleh Shah · Punjabi proverb · Grandmother in Sialkot"></div>
+    <div class="field" id="ed-fa-box"><label for="ed-fa">Persian original, one line per row (Rumi series)</label><textarea id="ed-fa" rows="3" dir="rtl" lang="fa" class="sm"></textarea></div>
     <div class="field"><label for="ed-sm">Shahmukhi</label><textarea id="ed-sm" rows="3" dir="rtl" lang="pnb" class="sm"></textarea></div>
     <div class="field"><label for="ed-ro">Romanised</label><textarea id="ed-ro" rows="3"></textarea></div>
     <div class="field"><label for="ed-en">English meaning</label><textarea id="ed-en" rows="3"></textarea></div>
@@ -451,7 +454,7 @@ function normSaying(doc) {
     id: doc.id, poet: d.poet || "", note: d.note || "", status: d.status || "candidate",
     confidence: d.confidence || "", researchNote: d.researchNote || "", origin: d.origin || "",
     series: seriesKey(d.series), suggestedHook: d.suggestedHook || "", suggestedQuestion: d.suggestedQuestion || "",
-    parts: (Array.isArray(d.parts) ? d.parts : []).filter((p) => p && p.shahmukhi).map((p) => ({ shahmukhi: String(p.shahmukhi), roman: String(p.roman || ""), english: String(p.english || "") })),
+    parts: (Array.isArray(d.parts) ? d.parts : []).filter((p) => p && p.shahmukhi).map((p) => ({ shahmukhi: String(p.shahmukhi), roman: String(p.roman || ""), english: String(p.english || ""), persian: String(p.persian || "") })),
     sources: (Array.isArray(d.sources) ? d.sources : []).filter((s) => s && (s.title || s.url)).map((s) => ({ title: String(s.title || ""), url: String(s.url || ""), note: String(s.note || "") })),
     updated: d.updated || d.created || "",
   };
@@ -493,8 +496,9 @@ function offline(msg) { $("offline").textContent = msg; $("offline").hidden = fa
 const SERIES = {
   sufi: { name: "Sufi line of the week", short: "Sufi line", tag: "#SufiLineOfTheWeek" },
   akhaan: { name: "Akhaan", short: "Akhaan", tag: "#PunjabiAkhaan" },
+  rumi: { name: "Rumi in Punjabi", short: "Rumi", tag: "#RumiInPunjabi" },
 };
-const DEFAULT_PLAN = { 1: "sufi", 3: "akhaan", 5: "sufi" }; // Mon, Wed, Fri
+const DEFAULT_PLAN = { 1: "sufi", 3: "akhaan", 5: "rumi" }; // Mon, Wed, Fri
 const seriesKey = (x) => (x && SERIES[x] ? x : "");
 const postsIn = (key) => app.posts.filter((p) => p.series === key);
 const postedSaying = (id) => app.posts.find((p) => p.sayingId === id);
@@ -548,6 +552,7 @@ function cardFor(s) {
 function detailsFor(s) {
   const d = el("div", { className: "details" });
   s.parts.forEach((p) => d.append(el("div", { className: "part" },
+    p.persian ? el("p", { className: "sm-line fa", lang: "fa", dir: "rtl", textContent: p.persian }) : null,
     el("p", { className: "sm-line", lang: "pnb", dir: "rtl", textContent: p.shahmukhi }),
     p.roman ? el("p", { className: "roman", textContent: p.roman }) : null,
     p.english ? el("p", { className: "en", textContent: p.english }) : null)));
@@ -617,6 +622,8 @@ function openEditor(s) {
   $("ed-poet").value = s ? s.poet : "";
   $("ed-series").value = s ? s.series : (app.seriesFilter === "akhaan" ? "akhaan" : "sufi");
   $("ed-sm").value = s ? s.parts.map((p) => p.shahmukhi).join("\n") : "";
+  $("ed-fa").value = s ? s.parts.map((p) => p.persian || "").join("\n").trim() : "";
+  $("ed-fa-box").hidden = $("ed-series").value !== "rumi";
   $("ed-ro").value = s ? s.parts.map((p) => p.roman).join("\n") : "";
   $("ed-en").value = s ? s.parts.map((p) => p.english).join("\n") : "";
   $("ed-sources").value = s ? s.sources.map((x) => [x.title, x.url].filter(Boolean).join(" ")).join("\n") : "";
@@ -626,17 +633,19 @@ function openEditor(s) {
   $("ed-poet").focus();
 }
 $("btn-add").addEventListener("click", () => openEditor(null));
+$("ed-series").addEventListener("change", () => { $("ed-fa-box").hidden = $("ed-series").value !== "rumi"; });
 $("ed-cancel").addEventListener("click", () => { $("editor").hidden = true; });
 $("ed-save").addEventListener("click", async () => {
   if (!app.db) { $("ed-msg").textContent = "The library can't be reached here, so this can't be saved."; return; }
   const rows = (id) => $(id).value.split("\n").map((l) => l.trim()).filter(Boolean);
-  const sm = rows("ed-sm"), ro = rows("ed-ro"), en = rows("ed-en");
+  const sm = rows("ed-sm"), ro = rows("ed-ro"), en = rows("ed-en"), fa = $("ed-series").value === "rumi" ? rows("ed-fa") : [];
+  if (fa.length && fa.length !== sm.length) { $("ed-msg").textContent = `The Persian box has ${fa.length} rows but the Shahmukhi has ${sm.length}. Match them row by row.`; return; }
   if (!sm.length) { $("ed-msg").textContent = "Add the saying in Shahmukhi."; return; }
   if (ro.length && ro.length !== sm.length) { $("ed-msg").textContent = `The romanised box has ${ro.length} rows but the Shahmukhi has ${sm.length}. Match them row by row.`; return; }
   if (en.length && en.length !== sm.length) { $("ed-msg").textContent = `The English box has ${en.length} rows but the Shahmukhi has ${sm.length}. Match them row by row.`; return; }
   const sources = rows("ed-sources").map((line) => { const m = line.match(/https?:\/\/\S+/); return { title: m ? line.replace(m[0], "").trim() : line, url: m ? m[0] : "", note: "" }; });
   const body = { poet: $("ed-poet").value.trim(), series: $("ed-series").value, note: $("ed-note").value.trim(), sources,
-    parts: sm.map((_, i) => ({ shahmukhi: sm[i], roman: ro[i] || "", english: en[i] || "" })), updated: nowIso() };
+    parts: sm.map((_, i) => ({ shahmukhi: sm[i], roman: ro[i] || "", english: en[i] || "", persian: fa[i] || "" })), updated: nowIso() };
   $("ed-save").disabled = true;
   try {
     if (editing) await app.db.doc("sayings/" + editing.id).update(body);
@@ -971,6 +980,12 @@ function layout(c, text, font, weight, box, opts) {
 }
 function layoutPart(c, p) {
   const X = 170, Wd = RW - 340; // inside the phulkari panel, clear of Instagram's right-hand buttons
+  if (p.persian) return { // Rumi: the Persian original, small, above the Punjabi translation
+    fa: layout(c, p.persian, F.sm, 700, { x: X, y: 360, w: Wd, h: 230 }, { size: 64, min: 36, lineH: 1.9, rtl: true, spaceMul: 2.2 }),
+    sm: layout(c, p.shahmukhi, F.sm, 700, { x: X, y: 640, w: Wd, h: 380 }, { size: 96, min: 40, lineH: 1.9, rtl: true, spaceMul: 2.2 }),
+    ro: p.roman ? layout(c, p.roman, F.roman, "italic 600", { x: X, y: 1060, w: Wd, h: 220 }, { size: 62, min: 32, lineH: 1.25 }) : null,
+    en: p.english,
+  };
   return {
     sm: layout(c, p.shahmukhi, F.sm, 700, { x: X, y: 380, w: Wd, h: 620 }, { size: 124, min: 40, lineH: 1.9, rtl: true, spaceMul: 2.2 }),
     ro: p.roman ? layout(c, p.roman, F.roman, "italic 600", { x: X, y: 1050, w: Wd, h: 230 }, { size: 70, min: 34, lineH: 1.25 }) : null,
@@ -1158,16 +1173,21 @@ function rebuildScene() {
   fillMediaSelects();
   updateTimingUI();
 }
-function drawWords(c, block, dt, alpha) {
+function drawWords(c, block, dt, alpha, color = C.cream) {
   c.font = block.font; c.textBaseline = "middle"; c.textAlign = "left"; c.direction = block.rtl ? "rtl" : "ltr";
-  c.shadowColor = "rgba(0,0,0,0.55)"; c.shadowBlur = 14; c.fillStyle = C.cream;
+  c.shadowColor = "rgba(0,0,0,0.55)"; c.shadowBlur = 14; c.fillStyle = color;
   block.words.forEach((w, i) => { const a = ease((dt - i * 0.07) / 0.32) * alpha; if (a <= 0) return; c.globalAlpha = a; c.fillText(w.t, w.x, w.y + (1 - a) * 16); });
   c.shadowBlur = 0; c.globalAlpha = 1; c.direction = "ltr";
 }
 function lineCount(c, text, maxW) { let n = 1, cur = ""; for (const w of words(text)) { const t = cur ? cur + " " + w : w; if (c.measureText(t).width > maxW && cur) { n++; cur = w; } else cur = t; } return n; }
 function wrapCentered(c, text, y, maxW, lh) { const out = []; let cur = ""; for (const w of words(text)) { const t = cur ? cur + " " + w : w; if (c.measureText(t).width > maxW && cur) { out.push(cur); cur = w; } else cur = t; } if (cur) out.push(cur); out.forEach((l, i) => c.fillText(l, RW / 2, y + i * lh)); }
 function drawPart(c, L, dt, alpha) {
-  drawWords(c, L.sm, dt, alpha);
+  if (L.fa) {
+    drawWords(c, L.fa, dt, alpha, C.gold);
+    c.globalAlpha = alpha * ease((dt - 0.3) / 0.4); c.fillStyle = C.muted; c.textAlign = "center"; c.textBaseline = "middle"; c.direction = "ltr";
+    c.font = `600 28px ${F.body}`; c.fillText("PERSIAN  ·  IN PUNJABI ↓", RW / 2, 615); c.globalAlpha = 1;
+    drawWords(c, L.sm, dt - 0.35, alpha);
+  } else drawWords(c, L.sm, dt, alpha);
   if (L.ro) drawWords(c, L.ro, dt - 0.45, alpha);
   const ea = alpha * ease((dt - 0.8) / 0.4);
   if (ea > 0 && L.en) {
@@ -1345,6 +1365,7 @@ async function makeReel() {
    spread a reel), then about five targeted hashtags rather than thirty generic ones. */
 function hashtagsFor(s) {
   const p = (s.poet || "").toLowerCase(), tags = ["#Punjabi", "#پنجابی", "#Shahmukhi"];
+  if (s.series === "rumi") { tags.push("#Rumi", "#Masnavi", SERIES.rumi.tag); return tags.join(" "); }
   const poets = [["bulleh", "#BullehShah"], ["waris", "#WarisShah"], ["hussain", "#ShahHussain"], ["bahu", "#SultanBahu"], ["farid", "#BabaFarid"], ["mian muhammad", "#MianMuhammadBakhsh"]];
   const hit = poets.find(([k]) => p.includes(k));
   if (hit) tags.push(hit[1], "#SufiPoetry");
@@ -1357,10 +1378,15 @@ function captionFor(s) {
   const sm = s.parts.map((p) => p.shahmukhi).join("\n"), ro = s.parts.map((p) => p.roman).filter(Boolean).join("\n"), en = s.parts.map((p) => p.english).filter(Boolean).join(" ");
   const q = $("cap-question").value, send = $("cap-send").checked, ep = episodeFor(s);
   const head = ep ? `${SERIES[s.series].name} · No. ${ep}` : "";
-  return [head, sm, ro, en ? `"${en}"` + (s.poet ? `\n— ${s.poet}` : "") : s.poet ? `— ${s.poet}` : "",
+  const fa = s.parts.map((p) => p.persian).filter(Boolean).join("\n");
+  return [head, fa ? `${fa}\n(Persian original)` : "", sm, ro, en ? `"${en}"` + (s.poet ? `\n— ${s.poet}` : "") : s.poet ? `— ${s.poet}` : "",
     q, send ? "Send this to someone who still speaks Punjabi at home." : "", hashtagsFor(s)].filter(Boolean).join("\n\n");
 }
 function altFor(s) {
+  if (s.parts.some((p) => p.persian)) {
+    const en = s.parts.map((p) => p.english).filter(Boolean).join(" ").replace(/[.!?]+$/, "");
+    return `A verse by Rumi${s.poet && /masnavi|divan/i.test(s.poet) ? " (" + s.poet.replace(/^rumi[,·\s]*/i, "") + ")" : ""}, shown in the original Persian and in a Punjabi translation in Shahmukhi script${en ? `, meaning "${en}"` : ""}.`;
+  }
   const ro = s.parts.map((p) => p.roman).filter(Boolean).join(" / "), en = s.parts.map((p) => p.english).filter(Boolean).join(" ").replace(/[.!?]+$/, "");
   return `A Punjabi saying in Shahmukhi script${s.poet ? " by " + s.poet : ""}${ro ? `, read as "${ro}"` : ""}${en ? `, meaning "${en}"` : ""}.`;
 }
@@ -1396,7 +1422,7 @@ function renderPlan() {
   const days = [1, 2, 3, 4, 5, 6, 0];
   $("plan-days").replaceChildren(...days.map((d) => {
     const sel = el("select", { id: "plan-" + d, ariaLabel: DAY[d] + " series" },
-      el("option", { value: "", textContent: "–" }), el("option", { value: "sufi", textContent: "Sufi" }), el("option", { value: "akhaan", textContent: "Akhaan" }));
+      el("option", { value: "", textContent: "–" }), el("option", { value: "sufi", textContent: "Sufi" }), el("option", { value: "akhaan", textContent: "Akhaan" }), el("option", { value: "rumi", textContent: "Rumi" }));
     sel.value = plan()[d] || "";
     sel.onchange = savePlan;
     return el("label", { htmlFor: sel.id }, DAY[d], sel);

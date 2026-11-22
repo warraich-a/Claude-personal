@@ -8,6 +8,6 @@ Source of the artifact published at https://claude.ai/artifact/MBSWumccymSRZ2Ffj
 
 - **Growth**: an optional 2-second opening hook, captions with a comment question, a share prompt and about five targeted hashtags, alt text, and a **Posts** tab that logs each reel's settings and Instagram Insights numbers and compares hooks, backgrounds, music, voices and poets.
 
-- **Series**: sayings belong to *Sufi line of the week* or *Akhaan*; reels show the series and an episode number, captions add a series line and hashtag, and the Posts tab holds a weekly schedule (default Mon Sufi, Wed Akhaan, Fri Sufi) with the next approved saying lined up for each posting day.
+- **Series**: sayings belong to *Sufi line of the week*, *Akhaan* or *Rumi in Punjabi* (Rumi reels show the Persian original above the Punjabi translation); reels show the series and an episode number, captions add a series line and hashtag, and the Posts tab holds a weekly schedule (default Mon Sufi, Wed Akhaan, Fri Rumi) with the next approved saying lined up for each posting day.
 
 The file is published as-is by the Artifact tool, which adds the HTML skeleton, so it has no `<!doctype>` of its own.
