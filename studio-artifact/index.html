@@ -103,6 +103,17 @@ button.big { width: 100%; padding: 16px; font-size: 1.1rem; }
 .result video { width: 100%; max-height: 65vh; background: #000; border-radius: 12px; }
 .is-recording header.top, .is-recording .studio-controls, .is-recording .result { display: none; }
 
+.series-tag { font-size: 0.75rem; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--gold); color: var(--gold); }
+.week { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 6px; }
+.week label { display: flex; flex-direction: column; gap: 4px; font-size: 0.75rem; text-align: center; }
+.week select { padding: 6px 4px; font-size: 0.85rem; border-radius: 8px; }
+.slots { display: flex; flex-direction: column; gap: 6px; }
+.slot { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--ground); font-size: 0.9rem; }
+.slot .when { color: var(--muted); font-variant-numeric: tabular-nums; }
+.slot .what { flex: 1 1 100%; order: 3; min-width: 0; overflow-wrap: anywhere; }
+.slot button { margin-left: auto; }
+.slot.done { opacity: 0.7; }
+.slot.gap .what { color: var(--warn); }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chips button { padding: 5px 10px; font-size: 0.82rem; font-weight: 400; }
 /* posts */
@@ -152,6 +163,12 @@ progress { width: 100%; accent-color: var(--gold); }
         <button type="button" id="btn-add" class="small">Add a saying</button>
       </div>
       <p class="hint">Sayings found in research arrive here as <b>To review</b>. Approve one only after a fluent reader has compared it with its source. Only approved sayings should go on the channel.</p>
+      <div class="filters" role="group" aria-label="Series" id="series-filters">
+        <button type="button" class="small" data-series="all" aria-pressed="true">All series</button>
+        <button type="button" class="small" data-series="sufi" aria-pressed="false">Sufi line</button>
+        <button type="button" class="small" data-series="akhaan" aria-pressed="false">Akhaan</button>
+        <button type="button" class="small" data-series="" aria-pressed="false">No series</button>
+      </div>
       <div class="filters" role="group" aria-label="Show">
         <button type="button" class="small" data-filter="candidate" aria-pressed="true">To review</button>
         <button type="button" class="small" data-filter="approved" aria-pressed="false">Approved</button>
@@ -327,6 +344,12 @@ progress { width: 100%; accent-color: var(--gold); }
       <h2 id="h-posts">Posts</h2>
       <p class="hint">Every reel you log from the studio appears here. About 3 days after posting, open the reel's Insights on Instagram and copy the numbers in. With 10 or more posts, the patterns below become worth trusting.</p>
       <div class="box">
+        <h3>Schedule</h3>
+        <p class="hint">Which series goes out on which day. The next 7 days show what's ready to post.</p>
+        <div class="week" id="plan-days"></div>
+        <div class="slots" id="slots"></div>
+      </div>
+      <div class="box">
         <h3>What's working</h3>
         <div id="insights"></div>
       </div>
@@ -340,6 +363,8 @@ progress { width: 100%; accent-color: var(--gold); }
   <div class="sheet-inner">
     <h2 id="editor-title">Saying</h2>
     <p class="hint">One line per row. Row 1 of each box belongs together, and each row becomes one screen of the reel.</p>
+    <div class="field"><label for="ed-series">Series</label>
+      <select id="ed-series"><option value="sufi">Sufi line of the week</option><option value="akhaan">Akhaan (proverbs)</option><option value="">No series</option></select></div>
     <div class="field"><label for="ed-poet">Poet or source</label><input id="ed-poet" type="text" placeholder="Bulleh Shah · Punjabi proverb · Grandmother in Sialkot"></div>
     <div class="field"><label for="ed-sm">Shahmukhi</label><textarea id="ed-sm" rows="3" dir="rtl" lang="pnb" class="sm"></textarea></div>
     <div class="field"><label for="ed-ro">Romanised</label><textarea id="ed-ro" rows="3"></textarea></div>
@@ -396,7 +421,7 @@ window.addEventListener("unhandledrejection", (e) => { const r = e.reason; showE
 const app = {
   db: null, assets: null, downloads: null,
   sayings: [], media: [], posts: [],
-  filter: "candidate", openCard: null,
+  filter: "candidate", seriesFilter: "all", openCard: null, plan: null,
 };
 const state = {
   sayingId: null, voice: "none", voiceId: "", music: "tanpura", musicId: "", bg: "phulkari", bgId: "",
@@ -425,6 +450,7 @@ function normSaying(doc) {
   return {
     id: doc.id, poet: d.poet || "", note: d.note || "", status: d.status || "candidate",
     confidence: d.confidence || "", researchNote: d.researchNote || "", origin: d.origin || "",
+    series: seriesKey(d.series), suggestedHook: d.suggestedHook || "", suggestedQuestion: d.suggestedQuestion || "",
     parts: (Array.isArray(d.parts) ? d.parts : []).filter((p) => p && p.shahmukhi).map((p) => ({ shahmukhi: String(p.shahmukhi), roman: String(p.roman || ""), english: String(p.english || "") })),
     sources: (Array.isArray(d.sources) ? d.sources : []).filter((s) => s && (s.title || s.url)).map((s) => ({ title: String(s.title || ""), url: String(s.url || ""), note: String(s.note || "") })),
     updated: d.updated || d.created || "",
@@ -447,13 +473,14 @@ async function connect() {
   const db = await c.use("db");
   if (!db) { offline("The library can't be reached in this view. The studio still works with files from your phone."); renderAll(); return; }
   app.db = db;
-  db.collection("posts").onSnapshot((snap) => { app.posts = snap.docs.map((d) => ({ id: d.id, ...d.data() })); renderPosts(); },
+  db.doc("settings/plan").onSnapshot((snap) => { const d = snap.exists ? snap.data() : null; app.plan = d && d.days ? d.days : null; renderPlan(); }, () => {});
+  db.collection("posts").onSnapshot((snap) => { app.posts = snap.docs.map((d) => ({ id: d.id, ...d.data() })); renderPosts(); renderLibrary(); rebuildScene(); },
     (e) => offline("The posts list stopped updating (" + e.code + ")."));
   const slow = setTimeout(() => offline("The library is taking a while to load. It may be out of date."), 10000);
   db.collection("sayings").onSnapshot((snap) => {
     if (!snap.metadata.fromCache) { clearTimeout(slow); $("offline").hidden = true; }
     app.sayings = snap.docs.map(normSaying).filter((s) => s.parts.length);
-    renderLibrary(); fillSayingSelects(); rebuildScene();
+    renderLibrary(); fillSayingSelects(); rebuildScene(); renderSlots();
   }, (e) => { clearTimeout(slow); offline("The library stopped updating (" + e.code + "). Reload the page to try again."); });
   db.collection("media").onSnapshot((snap) => {
     app.media = snap.docs.map(normMedia).filter((m) => m.assetId && m.kind);
@@ -463,12 +490,27 @@ async function connect() {
 function offline(msg) { $("offline").textContent = msg; $("offline").hidden = false; }
 
 // ---------- library ----------
+const SERIES = {
+  sufi: { name: "Sufi line of the week", short: "Sufi line", tag: "#SufiLineOfTheWeek" },
+  akhaan: { name: "Akhaan", short: "Akhaan", tag: "#PunjabiAkhaan" },
+};
+const DEFAULT_PLAN = { 1: "sufi", 3: "akhaan", 5: "sufi" }; // Mon, Wed, Fri
+const seriesKey = (x) => (x && SERIES[x] ? x : "");
+const postsIn = (key) => app.posts.filter((p) => p.series === key);
+const postedSaying = (id) => app.posts.find((p) => p.sayingId === id);
+/* Episode number shown on the reel: a saying already posted keeps its number; otherwise it's next in line. */
+function episodeFor(sy) {
+  const key = seriesKey(sy && sy.series); if (!key) return 0;
+  const done = postedSaying(sy.id); if (done && done.episode) return done.episode;
+  return postsIn(key).reduce((m, p) => Math.max(m, p.episode || 0), 0) + 1;
+}
 const STATUS_LABEL = { candidate: "To review", approved: "Approved", rejected: "Rejected" };
 function renderLibrary() {
   const review = app.sayings.filter((s) => s.status === "candidate").length;
   $("count-review").textContent = review ? `(${review})` : "";
   const list = app.sayings
     .filter((s) => app.filter === "all" || s.status === app.filter)
+    .filter((s) => app.seriesFilter === "all" || s.series === app.seriesFilter)
     .sort((a, b) => String(b.updated).localeCompare(String(a.updated)));
   const box = $("cards");
   if (!list.length) {
@@ -487,6 +529,8 @@ function cardFor(s) {
     s.parts[0].roman ? el("p", { className: "roman", textContent: s.parts[0].roman }) : null,
     el("div", { className: "meta" },
       el("span", { className: "pill " + s.status, textContent: STATUS_LABEL[s.status] || s.status }),
+      s.series ? el("span", { className: "series-tag", textContent: SERIES[s.series].short }) : null,
+      postedSaying(s.id) ? el("span", { className: "tag", textContent: "posted" + (postedSaying(s.id).episode ? " · no. " + postedSaying(s.id).episode : "") }) : null,
       s.poet ? el("span", { textContent: s.poet }) : null,
       el("span", { textContent: s.sources.length ? `${s.sources.length} source${s.sources.length > 1 ? "s" : ""}` : "no source yet" }),
       s.confidence ? el("span", { textContent: `confidence: ${s.confidence}` }) : null,
@@ -496,7 +540,7 @@ function cardFor(s) {
   toggle.setAttribute("aria-expanded", String(open));
   toggle.onclick = () => { app.openCard = open ? null : s.id; renderLibrary(); };
   const make = el("button", { type: "button", className: "small", textContent: "Make reel" });
-  make.onclick = () => { state.sayingId = s.id; $("saying").value = s.id; marks = null; rebuildScene(); loadVoiceMarks(); setView("studio"); };
+  make.onclick = () => openInStudio(s.id);
   card.append(el("div", { className: "row" }, toggle, make));
   if (open) card.append(detailsFor(s));
   return card;
@@ -549,17 +593,29 @@ async function setStatus(s, status) {
   try { await app.db.doc("sayings/" + s.id).update({ status, updated: nowIso() }); }
   catch (e) { offline("Couldn't save that change (" + e.code + ")."); }
 }
-document.querySelectorAll(".filters button").forEach((b) => b.addEventListener("click", () => {
+document.querySelectorAll(".filters button[data-filter]").forEach((b) => b.addEventListener("click", () => {
   app.filter = b.dataset.filter;
-  document.querySelectorAll(".filters button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+  document.querySelectorAll(".filters button[data-filter]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
   renderLibrary();
 }));
+document.querySelectorAll("#series-filters button").forEach((b) => b.addEventListener("click", () => {
+  app.seriesFilter = b.dataset.series;
+  document.querySelectorAll("#series-filters button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+  renderLibrary();
+}));
+function openInStudio(id) {
+  const s = sayingById(id); if (!s) return;
+  state.sayingId = id; $("saying").value = id; marks = null;
+  if (s.suggestedHook) { $("hook").value = s.suggestedHook; state.hook = s.suggestedHook; local.set("studio.hook", s.suggestedHook); }
+  rebuildScene(); loadVoiceMarks(); setView("studio");
+}
 
 // editor
 let editing = null;
 function openEditor(s) {
   editing = s || null;
   $("ed-poet").value = s ? s.poet : "";
+  $("ed-series").value = s ? s.series : (app.seriesFilter === "akhaan" ? "akhaan" : "sufi");
   $("ed-sm").value = s ? s.parts.map((p) => p.shahmukhi).join("\n") : "";
   $("ed-ro").value = s ? s.parts.map((p) => p.roman).join("\n") : "";
   $("ed-en").value = s ? s.parts.map((p) => p.english).join("\n") : "";
@@ -579,7 +635,7 @@ $("ed-save").addEventListener("click", async () => {
   if (ro.length && ro.length !== sm.length) { $("ed-msg").textContent = `The romanised box has ${ro.length} rows but the Shahmukhi has ${sm.length}. Match them row by row.`; return; }
   if (en.length && en.length !== sm.length) { $("ed-msg").textContent = `The English box has ${en.length} rows but the Shahmukhi has ${sm.length}. Match them row by row.`; return; }
   const sources = rows("ed-sources").map((line) => { const m = line.match(/https?:\/\/\S+/); return { title: m ? line.replace(m[0], "").trim() : line, url: m ? m[0] : "", note: "" }; });
-  const body = { poet: $("ed-poet").value.trim(), note: $("ed-note").value.trim(), sources,
+  const body = { poet: $("ed-poet").value.trim(), series: $("ed-series").value, note: $("ed-note").value.trim(), sources,
     parts: sm.map((_, i) => ({ shahmukhi: sm[i], roman: ro[i] || "", english: en[i] || "" })), updated: nowIso() };
   $("ed-save").disabled = true;
   try {
@@ -1130,7 +1186,9 @@ function render(c, t, tl, H = 0) {
   const outro = ease((t - tl.end) / 0.5);
   c.globalAlpha = ease((t - 0.2) / 0.6) * (1 - outro);
   c.font = `italic 600 52px ${F.roman}`; c.fillStyle = C.gold; c.textAlign = "center"; c.textBaseline = "middle"; c.direction = "ltr";
-  if (s.poet) c.fillText(s.poet, RW / 2, 270);
+  const ep = episodeFor(s);
+  if (ep) { c.font = `600 32px ${F.body}`; c.fillStyle = C.muted; c.fillText(`${SERIES[s.series].short.toUpperCase()}  ·  NO. ${ep}`, RW / 2, 232); c.font = `italic 600 52px ${F.roman}`; c.fillStyle = C.gold; }
+  if (s.poet) c.fillText(s.poet, RW / 2, ep ? 292 : 270);
   c.globalAlpha = 1;
   if (t < tl.end) {
     let i = -1; for (let k = 0; k < tl.marks.length; k++) if (t >= tl.marks[k]) i = k;
@@ -1275,7 +1333,7 @@ async function makeReel() {
   const blob = new Blob(chunks, { type: type.split(";")[0] });
   const base = (s.parts[0].roman || s.poet || "reel").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "reel";
   const v = state.voice === "library" ? mediaById(state.voiceId) : null;
-  lastReel = { blob, name: `${base}.${ext}`, meta: { sayingId: s.id, title: s.parts[0].roman || s.parts[0].shahmukhi, poet: s.poet, hook: state.hook.trim(), bg: state.bg, music: state.music, voice: state.voice === "none" ? "none" : "voice", contributor: v ? v.contributor : "" } };
+  lastReel = { blob, name: `${base}.${ext}`, meta: { sayingId: s.id, series: s.series, episode: episodeFor(s), title: s.parts[0].roman || s.parts[0].shahmukhi, poet: s.poet, hook: state.hook.trim(), bg: state.bg, music: state.music, voice: state.voice === "none" ? "none" : "voice", contributor: v ? v.contributor : "" } };
   $("post-date").value = new Date().toISOString().slice(0, 10); $("post-link").value = ""; $("log-status").textContent = "";
   if ($("result-video").src) URL.revokeObjectURL($("result-video").src);
   $("result-video").src = URL.createObjectURL(blob);
@@ -1292,20 +1350,26 @@ function hashtagsFor(s) {
   if (hit) tags.push(hit[1], "#SufiPoetry");
   else if (p.includes("proverb") || p.includes("akhaan")) tags.push("#PunjabiProverbs", "#PunjabiWisdom");
   else tags.push("#PunjabiWisdom", "#PunjabiPoetry");
+  if (s.series) tags.push(SERIES[s.series].tag);
   return tags.join(" ");
 }
 function captionFor(s) {
   const sm = s.parts.map((p) => p.shahmukhi).join("\n"), ro = s.parts.map((p) => p.roman).filter(Boolean).join("\n"), en = s.parts.map((p) => p.english).filter(Boolean).join(" ");
-  const q = $("cap-question").value, send = $("cap-send").checked;
-  return [sm, ro, en ? `"${en}"` + (s.poet ? `\n— ${s.poet}` : "") : s.poet ? `— ${s.poet}` : "",
+  const q = $("cap-question").value, send = $("cap-send").checked, ep = episodeFor(s);
+  const head = ep ? `${SERIES[s.series].name} · No. ${ep}` : "";
+  return [head, sm, ro, en ? `"${en}"` + (s.poet ? `\n— ${s.poet}` : "") : s.poet ? `— ${s.poet}` : "",
     q, send ? "Send this to someone who still speaks Punjabi at home." : "", hashtagsFor(s)].filter(Boolean).join("\n\n");
 }
 function altFor(s) {
   const ro = s.parts.map((p) => p.roman).filter(Boolean).join(" / "), en = s.parts.map((p) => p.english).filter(Boolean).join(" ").replace(/[.!?]+$/, "");
   return `A Punjabi saying in Shahmukhi script${s.poet ? " by " + s.poet : ""}${ro ? `, read as "${ro}"` : ""}${en ? `, meaning "${en}"` : ""}.`;
 }
-function refreshCaption() { const s = lastReel && sayingById(lastReel.meta.sayingId); if (!s) return; $("caption-text").value = captionFor(s); $("alt-text").value = altFor(s); }
-$("cap-question").addEventListener("change", refreshCaption);
+function refreshCaption() {
+  const s = lastReel && sayingById(lastReel.meta.sayingId); if (!s) return;
+  const sel = $("cap-question");
+  sel.querySelectorAll("option[data-suggested]").forEach((o) => o.remove());
+  if (s.suggestedQuestion) { const o = el("option", { value: s.suggestedQuestion, textContent: s.suggestedQuestion + " (suggested)" }); o.dataset.suggested = "1"; sel.prepend(o); if (!refreshCaption.touched) sel.value = s.suggestedQuestion; } $("caption-text").value = captionFor(s); $("alt-text").value = altFor(s); }
+$("cap-question").addEventListener("change", () => { refreshCaption.touched = true; refreshCaption(); });
 $("cap-send").addEventListener("change", refreshCaption);
 $("btn-copy-alt").addEventListener("click", () => {
   const ta = $("alt-text");
@@ -1316,12 +1380,60 @@ $("btn-copy-alt").addEventListener("click", () => {
 function fillHookIdeas() {
   const s = sayingById(state.sayingId);
   const ideas = ["Can you read this? ↓", "Your nani knew this one", "One line every Punjabi should know", "Still true, centuries later"];
+  if (s && s.suggestedHook) ideas.unshift(s.suggestedHook);
   if (s && s.poet && !/proverb/i.test(s.poet) && !/attributed/i.test(s.poet)) ideas.unshift(`${s.poet.split(",")[0]} said this…`);
   if (s && /proverb/i.test(s.poet)) ideas.unshift("A Punjabi proverb you'll use today");
   $("hook-ideas").replaceChildren(...ideas.map((t) => { const b = el("button", { type: "button", textContent: t }); b.onclick = () => { $("hook").value = t; setHook(t); }; return b; }));
 }
 function setHook(t) { state.hook = t; local.set("studio.hook", t); stopPreview(); updateTimingUI(); }
 $("hook").addEventListener("input", (e) => setHook(e.target.value));
+
+// ---------- schedule ----------
+const DAY = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const plan = () => app.plan || DEFAULT_PLAN;
+const isoDay = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+function renderPlan() {
+  const days = [1, 2, 3, 4, 5, 6, 0];
+  $("plan-days").replaceChildren(...days.map((d) => {
+    const sel = el("select", { id: "plan-" + d, ariaLabel: DAY[d] + " series" },
+      el("option", { value: "", textContent: "–" }), el("option", { value: "sufi", textContent: "Sufi" }), el("option", { value: "akhaan", textContent: "Akhaan" }));
+    sel.value = plan()[d] || "";
+    sel.onchange = savePlan;
+    return el("label", { htmlFor: sel.id }, DAY[d], sel);
+  }));
+  renderSlots();
+}
+async function savePlan() {
+  const days = {}; [0, 1, 2, 3, 4, 5, 6].forEach((d) => { const v = $("plan-" + d).value; if (v) days[d] = v; });
+  app.plan = days; renderSlots();
+  if (app.db) { try { await app.db.doc("settings/plan").set({ days, updated: nowIso() }); } catch (_) { offline("Couldn't save the schedule."); } }
+}
+/* The next 7 days: each posting day shows what was posted, or the next approved saying in that series
+   that hasn't been posted or lined up for an earlier day. */
+function renderSlots() {
+  const box = $("slots"); if (!box) return;
+  const used = new Set(app.posts.map((p) => p.sayingId)), rows = [];
+  const queue = {};
+  for (const key of Object.keys(SERIES)) queue[key] = app.sayings.filter((s) => s.series === key && s.status === "approved" && !used.has(s.id)).sort((a, b) => String(a.updated).localeCompare(String(b.updated)));
+  const today = new Date();
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() + i), key = plan()[d.getDay()];
+    if (!key) continue;
+    const date = isoDay(d), when = i === 0 ? "Today" : i === 1 ? "Tomorrow" : `${DAY[d.getDay()]} ${d.getDate()}`;
+    const done = app.posts.find((p) => p.postedOn === date && p.series === key);
+    if (done) { rows.push(el("div", { className: "slot done" }, el("span", { className: "when", textContent: when }), el("span", { className: "series-tag", textContent: SERIES[key].short }), el("span", { className: "what", textContent: "Posted: " + done.title }))); continue; }
+    const next = queue[key].shift();
+    if (next) {
+      const go = el("button", { type: "button", className: "small", textContent: "Make reel" }); go.onclick = () => openInStudio(next.id);
+      rows.push(el("div", { className: "slot" }, el("span", { className: "when", textContent: when }), el("span", { className: "series-tag", textContent: SERIES[key].short }), el("span", { className: "what", textContent: next.parts[0].roman || next.parts[0].shahmukhi }), go));
+    } else {
+      const review = app.sayings.filter((s) => s.series === key && s.status === "candidate").length;
+      rows.push(el("div", { className: "slot gap" }, el("span", { className: "when", textContent: when }), el("span", { className: "series-tag", textContent: SERIES[key].short }),
+        el("span", { className: "what", textContent: review ? `Nothing approved yet. ${review} waiting for review in the Library.` : "Nothing approved or waiting. Ask Claude for more." })));
+    }
+  }
+  box.replaceChildren(...(rows.length ? rows : [el("p", { className: "hint", textContent: "No posting days set. Pick a series for some days above." })]));
+}
 
 // ---------- posts ----------
 const BG_NAME = { phulkari: "Phulkari", sarson: "Sarson", diya: "Diya lights", rivers: "Five rivers", library: "Own photo/video", file: "Own photo/video" };
@@ -1340,6 +1452,7 @@ $("btn-log-post").addEventListener("click", async () => {
 const daysSince = (d) => (Date.now() - new Date(d + "T12:00:00").getTime()) / 86400000;
 const hasStats = (p) => p.stats && Number(p.stats.views) > 0;
 function renderPosts() {
+  renderSlots();
   const list = [...app.posts].sort((a, b) => String(b.postedOn).localeCompare(String(a.postedOn)));
   const due = list.filter((p) => !hasStats(p) && daysSince(p.postedOn) >= 2).length;
   $("count-stats").textContent = due ? `(${due})` : "";
@@ -1388,6 +1501,7 @@ function renderInsights() {
   if (done.length < 3) { box.replaceChildren(el("p", { className: "hint", textContent: `Add numbers for at least 3 posts to see patterns. ${done.length ? `So far: ${done.length}.` : ""}` })); return; }
   const n = (v) => Number(v) || 0;
   const dims = [
+    ["Series", (p) => (SERIES[p.series] ? SERIES[p.series].name : "No series")],
     ["Opening hook", (p) => (p.hook ? "With a hook" : "No hook")],
     ["Background", (p) => BG_NAME[p.bg] || p.bg || "?"],
     ["Music", (p) => MUSIC_NAME[p.music] || p.music || "?"],
@@ -1453,7 +1567,7 @@ loadPrefs();
 bindRadio("voice", "voice", loadVoice);
 bindRadio("music", "music", loadMusic);
 bindRadio("bg", "bg", loadBackground);
-$("saying").addEventListener("change", (e) => { state.sayingId = e.target.value; stopPreview(); marks = null; voiceEl && (voiceEl.dataset.k = ""); rebuildScene(); loadVoiceMarks(); });
+$("saying").addEventListener("change", (e) => { stopPreview(); openInStudio(e.target.value); });
 function loadVoiceMarks() { const m = state.voice === "library" ? mediaById(state.voiceId) : null; marks = m && Array.isArray(m.marks[state.sayingId]) ? m.marks[state.sayingId] : null; updateTimingUI(); }
 $("voice-pick").addEventListener("change", (e) => { state.voiceId = e.target.value; stopPreview(); loadVoice(); loadVoiceMarks(); });
 $("music-pick").addEventListener("change", (e) => { state.musicId = e.target.value; stopPreview(); loadMusic(); });
@@ -1496,7 +1610,7 @@ $("tap").addEventListener("click", async () => {
 $("timing-done").addEventListener("click", () => { voiceEl.pause(); voiceEl.onended = null; $("timing").hidden = true; updateTimingUI(); });
 
 // ---------- start ----------
-function renderAll() { renderLibrary(); renderMedia(); renderPosts(); fillSayingSelects(); fillMediaSelects(); rebuildScene(); }
+function renderAll() { renderLibrary(); renderMedia(); renderPosts(); renderPlan(); fillSayingSelects(); fillMediaSelects(); rebuildScene(); }
 updateUploadForm();
 showView();
 Promise.all([
